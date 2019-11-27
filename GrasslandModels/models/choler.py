@@ -14,6 +14,10 @@ class CholerLinear(BaseModel):
         self._organize_parameters(parameters)
         #self._required_data = {'predictor_columns': ['site_id', 'year', 'doy', 'temperature'],
          #                      'predictors': ['pr','tasmin','tasmax']}
+        self._required_predictors = {'precip': 'per_timestep',
+                                     'evap'  : 'per_timestep',
+                                     'Wcap'  : 'per_site',
+                                     'Wp'    : 'per_site'}
 
     def _apply_model(self,
                      # Site specific drivers

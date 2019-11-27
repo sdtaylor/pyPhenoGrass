@@ -21,12 +21,13 @@ class BaseModel():
         """Estimate the parameters of a model
 
         Parameters:
-            observations : dataframe
-                pandas dataframe of phenology observations
-
-            predictors : dataframe
-                pandas dataframe of associated predictor variables such as
-                temperature, precipitation, and day length
+            observations: np.array 
+                Timeseries of the observations. Axis 0 should be the time axis,
+                with other axis corresponding to sites or locations. The shape
+                of this array must match the shape of any timeseries predictors.
+            
+            predictors : dict
+                dictionary of predictors specified by the model
 
             loss_function : str, or function
             
@@ -50,15 +51,16 @@ class BaseModel():
 
         """
 
-        validation.validate_predictors(predictors, self._required_data['predictor_columns'])
-        validation.validate_observations(observations)
+        validation.validate_predictors(predictors, self._required_predictors)
+        validation.validate_observations(observations, predictors)
         self._set_loss_function(loss_function)
         if len(self._parameters_to_estimate) == 0:
             raise RuntimeError('No parameters to estimate')
 
-        self._organize_predictors(predictors=predictors,
-                                  observations=observations,
-                                  for_prediction=False)
+
+        # Store these as they'll be used for fitting and subsequent predictions
+        self.fitting_predictors = predictors
+        self.obs_fitting = observations
 
         if debug:
             verbose = True
@@ -87,12 +89,6 @@ class BaseModel():
             print('Mean timing: {t} sec/iteration \n\n'.format(t=mean_time))
             self.debug = False
         self._fitted_params.update(self._fixed_parameters)
-
-        # Check predictions for 999, indicating a bad fit.
-        if np.any(self.predict() == 999):
-            warn('999 values in predictions, indicating lack of convergence '\
-                 'in model fitting. Perhaps try with different optimizer '\
-                 'values.')
 
     def predict(self, to_predict=None, predictors=None, **kwargs):
         """Make predictions
@@ -172,26 +168,26 @@ class BaseModel():
         else:
             raise TypeError('Unknown loss_function. Must be string or custom function')
 
-    def _organize_predictors(self, observations, predictors, for_prediction):
-        """Convert data to internal structure used by models
-
-        This function inside _base() is used for all the modes which
-        have temperature as the only predictor variables (which is most of them). 
-        Models which have other predictors have their own _organize_predictors() method.
-        """
-        if for_prediction:
-            temperature_fitting, doy_series = utils.misc.temperature_only_data_prep(observations,
-                                                                                    predictors,
-                                                                                    for_prediction=for_prediction)
-            return {'temperature': temperature_fitting,
-                    'doy_series': doy_series}
-        else:
-            cleaned_observations, temperature_fitting, doy_series = utils.misc.temperature_only_data_prep(observations,
-                                                                                                          predictors,
-                                                                                                          for_prediction=for_prediction)
-            self.fitting_predictors = {'temperature': temperature_fitting,
-                                       'doy_series': doy_series}
-            self.obs_fitting = cleaned_observations
+#    def _organize_predictors(self, observations, predictors, for_prediction):
+#        """Convert data to internal structure used by models
+#
+#        This function inside _base() is used for all the modes which
+#        have temperature as the only predictor variables (which is most of them). 
+#        Models which have other predictors have their own _organize_predictors() method.
+#        """
+#        if for_prediction:
+#            temperature_fitting, doy_series = utils.misc.temperature_only_data_prep(observations,
+#                                                                                    predictors,
+#                                                                                    for_prediction=for_prediction)
+#            return {'temperature': temperature_fitting,
+#                    'doy_series': doy_series}
+#        else:
+#            cleaned_observations, temperature_fitting, doy_series = utils.misc.temperature_only_data_prep(observations,
+#                                                                                                          predictors,
+#                                                                                                          for_prediction=for_prediction)
+#            self.fitting_predictors = {'temperature': temperature_fitting,
+#                                       'doy_series': doy_series}
+#            self.obs_fitting = cleaned_observations
 
     def _validate_formatted_predictors(self, predictors):
         """Make sure everything is valid.
