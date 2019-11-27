@@ -49,6 +49,7 @@ class CholerLinear(BaseModel):
                      Sd        = 0,
                      ):
         
+        L = int(L)
         # Initialze state variables
         W = np.empty_like(precip).astype('float32')
         W[:] = W_initial
