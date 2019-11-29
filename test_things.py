@@ -36,10 +36,10 @@ single_site['date'] = pd.to_datetime(single_site.year, format='%Y') + pd.to_time
 single_site['month'] = single_site.date.dt.month
 
 # Aggregate by month
-single_site = single_site.groupby(['year','month']).agg({'gcc':'mean','et':'mean','prcp':'sum'}).reset_index()
+single_site = single_site.groupby(['year','month']).agg({'gcc':'mean','et':'sum','prcp':'sum'}).reset_index()
 
 fitting_params = {'maxiter':200,
- 'popsize':200,
+ 'popsize':100,
  'mutation':(0.5,1),
  'recombination':0.25,
  'disp':True}
@@ -47,7 +47,8 @@ fitting_params = {'maxiter':200,
 def na_rmse_loss(obs, pred):
     return np.sqrt(np.nanmean((obs - pred)**2))
 
-m = CholerLinear()
+m = CholerLinear(parameters={'a1':(0,500),'a2':(0,500),
+                             'a3':(0,500),'L':(0,3)})
 m.fit(observations=single_site.gcc.values,
       predictors={'precip':single_site.prcp.values,
                   'evap':single_site.et.values,
