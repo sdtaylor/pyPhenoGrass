@@ -59,6 +59,10 @@ class PhenoGrass(BaseModel):
                      V_initial = 0.001,
                      Sd        = 0,
                      m         = 3600, # Not actaully used anywhere but in phenograss.f90
+                     
+                     # Normally just the V (vegatation cover) should be returned,
+                     # but for diagnostics use 'all' to get V, W, and Dtl
+                     return_vars = 'V'
                      ):
         
         L = int(L) # must be a whole number. and floats will be truncated.
@@ -69,14 +73,14 @@ class PhenoGrass(BaseModel):
         b1 = Wp
         
         # Initialze state variables
-        W = np.empty_like(precip)
+        W = np.empty_like(precip).astype('float32')
         W[:] = W_initial
         
-        V = np.empty_like(precip)
+        V = np.empty_like(precip).astype('float32')
         V[:] = V_initial
         
         # Initialize empty vectors of derived variables
-        Dt = np.zeros_like(precip)
+        Dt = np.zeros_like(precip).astype('float32')
         
         # TODO: checks on daily vector lengths, etc.
         n_timesteps = len(precip) - 1
@@ -135,9 +139,9 @@ class PhenoGrass(BaseModel):
             V[i+1] = V[i] + g * dor * b2 * Dtl * (1 - (V[i]/Vmax)) - d * b3 * V[i] * (1-V[i])
             
             # Constrain veg to 0-1
-            print(V[i+1])
             V[i+1] = max(Vmin, min(Vmax, V[i+1]))
-            print(V[i+1])
-            print('##')
-            
-        return V
+        
+        if return_vars == 'V':
+            return V
+        elif return_vars == 'all':
+            return V, W, Dt
