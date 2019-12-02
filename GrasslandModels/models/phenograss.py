@@ -19,6 +19,7 @@ class PhenoGrass(BaseModel):
                                      'evap'  : 'per_timestep',
                                      'Ra' : 'per_timestep',
                                      'Tm'   : 'per_timestep',
+                                     'MAP'   : 'per_site',
                                      'Wcap'  : 'per_site',
                                      'Wp'    : 'per_site'}
 
@@ -31,6 +32,8 @@ class PhenoGrass(BaseModel):
                      Tm,      # Running mean T with 15 day lag
                      Wcap,    # field capacity, single value/site
                      Wp,      # wilting point, single value/site
+                     MAP,     # Mean avg precip, used to scale model input(gcc) to output (fcover)
+                              # fCover = GCC * MAP/ (MAP+h), where h is an estimated  parameter
                      
                      # Model parameters
                      b1,  # Note b1 is set below to Wp as writtin the phenograss.f90. 
@@ -141,6 +144,8 @@ class PhenoGrass(BaseModel):
             # Constrain veg to 0-1
             V[i+1] = max(Vmin, min(Vmax, V[i+1]))
         
+        scaling_factor = MAP / (MAP + h)
+        V = V / scaling_factor
         if return_vars == 'V':
             return V
         elif return_vars == 'all':

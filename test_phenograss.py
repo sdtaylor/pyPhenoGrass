@@ -107,25 +107,19 @@ for site_file in site_files:
                                'Topt':33.3597641,
                                'Phmax':37.2918091}
 
+    MAP = site_data.groupby('year')['prcp'].agg('sum').mean()
+    
     V, W, Dt = m._apply_model(precip = site_data.prcp.values,
                                        evap   = site_data.et.values,
                                        Tm     = site_data.tmean_15day.values,
                                        Ra     = site_data.radiation.values,
+                                       MAP    = MAP,
                                        Wcap = site_metadata['WCAP'],
                                        Wp   = site_metadata['WP'],
                                        V_initial=0.01,
                                        **koens_phenograss_params,
                                        return_vars='all')
     site_data['modelled_gcc'] = V
-    
-    # Scale the observed gcc using eq. 1. Need to calculated MAP
-    
-    MAP = site_data.groupby('year')['prcp'].agg('sum').mean()
-    scaling_factor = MAP / (MAP + koens_phenograss_params['h'])
-
-    # The model output is already scaled, so just need to scale the observed
-    # gcc to the same range, which would have been used as model training data
-    site_data['scaled_gcc'] = site_data.gcc * scaling_factor
     
     all_results = all_results.append(site_data)
 
