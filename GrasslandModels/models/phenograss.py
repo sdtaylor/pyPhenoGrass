@@ -10,33 +10,41 @@ class PhenoGrass(BaseModel):
 
     def __init__(self, parameters={}):
         BaseModel.__init__(self)
-        self.all_required_parameters = {'t1': (-67, 298), 'T': (-25, 25), 'F': (0, 1000)}
+        self.all_required_parameters = {'a1': (0, 100), 'a2': (0, 100), 
+                                        'a3': (0, 100), 'L': (0,10)}
         self._organize_parameters(parameters)
-        self._required_data = {'predictor_columns': ['site_id', 'year', 'doy', 'temperature'],
-                               'predictors': ['pr','tasmin','tasmax']}
+        #self._required_data = {'predictor_columns': ['site_id', 'year', 'doy', 'temperature'],
+         #                      'predictors': ['pr','tasmin','tasmax']}
+        self._required_predictors = {'precip': 'per_timestep',
+                                     'evap'  : 'per_timestep',
+                                     'Ra' : 'per_timestep',
+                                     'Tm'   : 'per_timestep',
+                                     'Wcap'  : 'per_site',
+                                     'Wp'    : 'per_site'}
 
     def _apply_model(self,
                      # Site specific drivers
                      precip,  # precip, Daily vector
                      evap,    # potential ET, Daily vector
-                     T,       # ? mean temp ? not actually used in phenograss.f90
+                     #T,       # ? mean temp ? not actually used in phenograss.f90
                      Ra,      # TOA radiation, MJ m-2 s-1, daily vector
-                     Tm,      # mean temp, daily vector
+                     Tm,      # Running mean T with 15 day lag
                      Wcap,    # field capacity, single value/site
                      Wp,      # wilting point, single value/site
                      
                      # Model parameters
-                     #b1,  # Note b1 is set below to Wp as writtin the phenograss.f90. 
+                     b1,  # Note b1 is set below to Wp as writtin the phenograss.f90. 
                            # TODO: sort that out
                      b2,
                      b3,
                      b4,
                      L,
                      Phmin,
-                     slope,
                      Topt,
                      Phmax,
                      
+                     h = None, # This is from Eq. 1 to help scale the fCover. It's denoted a
+                               # "slope" in the phenograss parameter files. 
                      # Constants
                      Tmin = 0,  # Maximum temperature of the growth response curve
                      Tmax = 45,
@@ -50,12 +58,14 @@ class PhenoGrass(BaseModel):
                      Wstart    = 0,
                      V_initial = 0.001,
                      Sd        = 0,
-                     #b1        = Wp,
-                     m         = 3600,
+                     m         = 3600, # Not actaully used anywhere but in phenograss.f90
                      ):
         
+        L = int(L) # must be a whole number. and floats will be truncated.
+        
         # b1 should be a parameter, but in the phenograss fortran code
-        # it's set to Wp
+        # it's set to Wp. 
+        # All b params are +1, see  https://github.com/sdtaylor/GrasslandModels/issues/2
         b1 = Wp
         
         # Initialze state variables
@@ -69,7 +79,7 @@ class PhenoGrass(BaseModel):
         Dt = np.zeros_like(precip)
         
         # TODO: checks on daily vector lengths, etc.
-        n_timesteps = len(precip)
+        n_timesteps = len(precip) - 1
         
         for i in range(1,n_timesteps):
             
@@ -79,16 +89,17 @@ class PhenoGrass(BaseModel):
             if i - L - 1 < 0:
                 Dt[i] = np.max([0, W[i] - b1])
                 Dtl = Wstart
-                Dtll = Wstart
+                Dtl1 = Wstart
             else:
                 Dt[i] = np.max([0, W[i] - b1])
                 Dtl = Dt[i-L]
-                Dtll = Dt[i-L-1]
+                Dtl1 = Dt[i-L-1]
             
             # Eq. 7
-            # If there is more there precip than the prior day
-            # then decay is 1 and senescensce sets in
-            if Dtl > Dtll:
+            # If plant available water is on the decline
+            # then decay is 1 and senescensce sets in via the last
+            # part of Eq. 3
+            if Dtl > Dtl1:
                 d = 0
             else:
                 d = 1
@@ -101,18 +112,17 @@ class PhenoGrass(BaseModel):
             # growth to 0 here.
             if np.isnan(g):
                 g = 0
-                raise RuntimeWarning('Temperature response g resolved to nan in timestep' + str(i))
+                #raise RuntimeWarning('Temperature response g resolved to nan in timestep ' + str(i))
         
             # Eq. 8
-            # Enforce sensence based on sunlight
+            # Enforce sensence based on radation
             # TODO: this doesn't exactly match eq 8
+            # The if statement here seems to set the bounds at 0-1.
+            dor = (Ra[i] - Phmin) / (Phmax - Phmin)
             if Ra[i] >= Phmax:
                 dor = 1
             elif Ra[i] <= Phmin:
-                dor = 0
-            else:
-                dor = (Ra[i] - Phmin) / (Phmax - Phmin)
-                
+                dor = 0                
             
             # Eq. 2 Soil Water Content
             W[i+1] = W[i] + precip[i] - (1 - V[i]) * ((Dt[i]/(Wcap - b1))**2) * evap[i] - g * b4 * V[i] * Dt[i]
@@ -125,5 +135,9 @@ class PhenoGrass(BaseModel):
             V[i+1] = V[i] + g * dor * b2 * Dtl * (1 - (V[i]/Vmax)) - d * b3 * V[i] * (1-V[i])
             
             # Constrain veg to 0-1
+            print(V[i+1])
             V[i+1] = max(Vmin, min(Vmax, V[i+1]))
+            print(V[i+1])
+            print('##')
             
+        return V
