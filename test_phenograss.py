@@ -12,6 +12,8 @@ def read_example_data(filepath):
                               'prcp', 'day_length', 'incident_radiation',
                               'snow_water_equivalent', 'VPD'])
     
+    #df = df[df.year.isin([2008,2009,2010,2011,2012,2013])]
+    #df = df[df.year.isin([2013])]
     return df
 
 def read_example_metdata(filepath):
@@ -34,9 +36,25 @@ def read_example_metdata(filepath):
 site_files = ['freemangrass_grass.csv','ibp_grass.csv','kansas_grass.csv',
               'lethbridge_grass.csv','marena_grass.csv','vaira_grass.csv']
 
-all_results = pd.DataFrame()
+#site_files = ['freemangrass_grass.csv','ibp_grass.csv','kansas_grass.csv']
 
-for site_file in site_files:
+
+test_data = read_example_data('data/'+site_files[0]) # read 1 file to get dimensions
+n_sites = len(site_files)
+timeseries_length = test_data.shape[0]
+
+# initialize predictor arrays
+precip = np.zeros((timeseries_length, n_sites))
+evap   = np.zeros((timeseries_length, n_sites))
+Ra     = np.zeros((timeseries_length, n_sites))
+Tm     = np.zeros((timeseries_length, n_sites))
+MAP    = np.zeros((n_sites))
+Wcap   = np.zeros((n_sites))
+Wp     = np.zeros((n_sites))
+
+GCC    = np.zeros((n_sites, timeseries_length))
+
+for site_i, site_file in enumerate(site_files):
     site_metadata = read_example_metdata('./data/'+site_file)
     site_data = read_example_data('./data/'+site_file)
     
@@ -66,69 +84,59 @@ for site_file in site_files:
     
     #site_data = site_data[site_data.year.isin([2008,2009,2010,2011,2012,2013])]
 
+    site_MAP = site_data.groupby('year')['prcp'].agg('sum').mean()
 
     ###########################
     # convert year + day of year to actual date object
     site_data['date'] = pd.to_datetime(site_data.year, format='%Y') + pd.to_timedelta(site_data.doy-1, unit='d')
     site_data['month'] = site_data.date.dt.month
 
-    # Aggregate by month
-    #site_data = single_site.groupby(['year','month']).agg({'gcc':'mean','et':'sum','prcp':'sum'}).reset_index()
-    m = PhenoGrass()
+    precip[:,site_i] = site_data.prcp.values
+    evap[:,site_i]   = site_data.et.values
+    Tm[:,site_i]     = site_data.tmean_15day.values
+    Ra[:,site_i]     = site_data.radiation.values
+    MAP[site_i]    = site_MAP
+    Wcap[site_i]   = site_metadata['WCAP']
+    Wp[site_i]     = site_metadata['WP']
     
-    #fitting_params = {'maxiter':200,
-    # 'popsize':100,
-    # 'mutation':(0.5,1),
-    # 'recombination':0.25,
-    # 'disp':True}
-    #
-    #def na_rmse_loss(obs, pred):
-    #    return np.sqrt(np.nanmean((obs - pred)**2))
-    
-    #m = CholerLinear(parameters={'a1':(0,500),'a2':(0,500),
-    #                             'a3':(0,500),'L':(0,3)})
-    #m.fit(observations=single_site.gcc.values,
-    #      predictors={'precip':single_site.prcp.values,
-    #                  'evap':single_site.et.values,
-    #                  'Wcap': np.array([422.4]),
-    #                  'Wp':   np.array([158.5])},
-    #    loss_function=na_rmse_loss,
-    #     debug=True, optimizer_params=fitting_params)
-    #
-    #single_site['modelled_gcc'] = m.predict()
-    
-    koens_phenograss_params = {'b1':124.502121,
-                               'b2':0.00227958267,
-                               'b3':0.0755224228,
-                               'b4':0.519348383,
-                               'L':2.4991734,
-                               'Phmin':8.14994431,
-                               'h': 222.205673,
-                               'Topt':33.3597641,
-                               'Phmax':37.2918091}
 
-    MAP = site_data.groupby('year')['prcp'].agg('sum').mean()
+
+# Aggregate by month
+#site_data = single_site.groupby(['year','month']).agg({'gcc':'mean','et':'sum','prcp':'sum'}).reset_index()
+m = PhenoGrass()
+
+koens_phenograss_params = {'b1':124.502121,
+                           'b2':0.00227958267,
+                           'b3':0.0755224228,
+                           'b4':0.519348383,
+                           'L':2.4991734,
+                           'Phmin':8.14994431,
+                           'h': 222.205673,
+                           'Topt':33.3597641,
+                           'Phmax':37.2918091}
+
+V, W, Dt = m._apply_model(precip = precip,
+                           evap   = evap,
+                           Tm     = Tm,
+                           Ra     = Ra,
+                           MAP    = MAP,
+                           Wcap = Wcap,
+                           Wp   = Wp,
+                           V_initial=0.01,
+                           **koens_phenograss_params,
+                           return_vars='all')
+
+# put the modelled GCC back into site files
+all_results = pd.DataFrame()
+
+for site_i, site_file in enumerate(site_files):
+    site_metadata = read_example_metdata('./data/'+site_file)
+    site_data = read_example_data('./data/'+site_file)
     
-    V, W, Dt = m._apply_model(precip = site_data.prcp.values,
-                                       evap   = site_data.et.values,
-                                       Tm     = site_data.tmean_15day.values,
-                                       Ra     = site_data.radiation.values,
-                                       MAP    = MAP,
-                                       Wcap = site_metadata['WCAP'],
-                                       Wp   = site_metadata['WP'],
-                                       V_initial=0.01,
-                                       **koens_phenograss_params,
-                                       return_vars='all')
-    site_data['modelled_gcc'] = V
-    
+    site_data['date'] = pd.to_datetime(site_data.year, format='%Y') + pd.to_timedelta(site_data.doy-1, unit='d')
+    site_data['gcc'] = site_data.gcc.replace(-9999, np.nan)
+    site_data['modelled_gcc'] = V[:,site_i]
+    site_data['Site'] = site_metadata['Site']
     all_results = all_results.append(site_data)
 
-all_results.to_csv('phenograss_test_runs.csv', index=False)
-    
-#plt.plot(np.arange(V.shape[0]), V, 'o',color='black')
-#    
-#(ggplot(single_site, aes('doy','gcc', color='factor(year)')) 
-#  +geom_point())
-#
-#(ggplot(single_site, aes('doy','radiation', color='factor(year)')) 
-#  +geom_point())
+all_results.to_csv('phenograss_test_runs_vectorized.csv', index=False)
