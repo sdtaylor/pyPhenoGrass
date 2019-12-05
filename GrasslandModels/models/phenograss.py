@@ -75,18 +75,27 @@ class PhenoGrass(BaseModel):
         # All b params are +1, see  https://github.com/sdtaylor/GrasslandModels/issues/2
         b1 = Wp
         
-        # Initialze state variables
+        # Initialize everything
+        # Primary state variables
         W = np.empty_like(precip).astype('float32')
         W[:] = W_initial
         
         V = np.empty_like(precip).astype('float32')
         V[:] = V_initial
-        
-        # Initialize empty vectors of derived variables
+
+        # Derived variables
         Dt = np.zeros_like(precip).astype('float32')
         
+        # Site level vars such as lagged plant-water and
+        # temp responses
+        Dtl  = np.empty_like(Wp)
+        Dtl1 = np.empty_like(Wp)
+        
+        g    = np.empty_like(Wp)
+        dor  = np.empty_like(Wp)
+        
         # TODO: checks on daily vector lengths, etc.
-        n_timesteps = len(precip) - 1
+        n_timesteps = precip.shape[0] - 1
         
         for i in range(1,n_timesteps):
             
@@ -94,11 +103,11 @@ class PhenoGrass(BaseModel):
             # if they are near the start of the timeseries then initialize
             # to something reasonable
             if i - L - 1 < 0:
-                Dt[i] = np.max([0, W[i] - b1])
-                Dtl = Wstart
-                Dtl1 = Wstart
+                Dt[i] = np.maximum(0, W[i] - b1)
+                Dtl[:] = Wstart
+                Dtl1[:] = Wstart
             else:
-                Dt[i] = np.max([0, W[i] - b1])
+                Dt[i] = np.maximum(0, W[i] - b1)
                 Dtl = Dt[i-L]
                 Dtl1 = Dt[i-L-1]
             
@@ -106,43 +115,43 @@ class PhenoGrass(BaseModel):
             # If plant available water is on the decline
             # then decay is 1 and senescensce sets in via the last
             # part of Eq. 3
-            if Dtl > Dtl1:
-                d = 0
-            else:
-                d = 1
+            d = (Dtl < Dtl1) * 1
+            #if Dtl > Dtl1:
+            #    d = 0
+            #else:
+            #    d = 1
         
             # Eq. 10
             # Temperature response function
-            g = ((Tmax - Tm[i]) / (Tmax - Topt)) * (((Tm[i] - Tmin) / (Topt - Tmin)) ** (Topt/(Tmax-Topt)))
+            g[:] = ((Tmax - Tm[i]) / (Tmax - Topt)) * (((Tm[i] - Tmin) / (Topt - Tmin)) ** (Topt/(Tmax-Topt)))
             
             # Temperatures too hot or cold can result in NA values, so set
             # growth to 0 here.
-            if np.isnan(g):
-                g = 0
-                #raise RuntimeWarning('Temperature response g resolved to nan in timestep ' + str(i))
+            g[np.isnan(g)] = 0
+            #raise RuntimeWarning('Temperature response g resolved to nan in timestep ' + str(i))
         
             # Eq. 8
             # Enforce sensence based on radation
             # TODO: this doesn't exactly match eq 8
             # The if statement here seems to set the bounds at 0-1.
-            dor = (Ra[i] - Phmin) / (Phmax - Phmin)
-            if Ra[i] >= Phmax:
-                dor = 1
-            elif Ra[i] <= Phmin:
-                dor = 0                
+            dor[:] = (Ra[i] - Phmin) / (Phmax - Phmin)
+            # If Ra >= Phmax. Must be done vector wise
+            dor[Ra[i] >= Phmax] = 1
+            # if Ra <Phmin
+            dor[Ra[i] <= Phmin] = 0               
             
             # Eq. 2 Soil Water Content
             W[i+1] = W[i] + precip[i] - (1 - V[i]) * ((Dt[i]/(Wcap - b1))**2) * evap[i] - g * b4 * V[i] * Dt[i]
             
             # No negative SWC
-            W[i + 1] = max(0, min(Wcap, W[i+1]))
+            W[i + 1] = np.maximum(0, np.minimum(Wcap, W[i+1]))
             
             # Eq. 3 Vegetation growth
             # TODO: b2/b3 in the  fortran code, but b1/b2 in the paper math
             V[i+1] = V[i] + g * dor * b2 * Dtl * (1 - (V[i]/Vmax)) - d * b3 * V[i] * (1-V[i])
             
             # Constrain veg to 0-1
-            V[i+1] = max(Vmin, min(Vmax, V[i+1]))
+            V[i+1] = np.maximum(Vmin, np.minimum(Vmax, V[i+1]))
         
         scaling_factor = MAP / (MAP + h)
         V = V / scaling_factor
