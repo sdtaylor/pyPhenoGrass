@@ -115,7 +115,7 @@ class PhenoGrass(BaseModel):
             # If plant available water is on the decline
             # then decay is 1 and senescensce sets in via the last
             # part of Eq. 3
-            d = (Dtl < Dtl1) * 1
+            d = (Dtl <= Dtl1) * 1
             #if Dtl > Dtl1:
             #    d = 0
             #else:
