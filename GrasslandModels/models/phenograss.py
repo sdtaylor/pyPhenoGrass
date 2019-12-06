@@ -10,8 +10,10 @@ class PhenoGrass(BaseModel):
 
     def __init__(self, parameters={}):
         BaseModel.__init__(self)
-        self.all_required_parameters = {'a1': (0, 100), 'a2': (0, 100), 
-                                        'a3': (0, 100), 'L': (0,10)}
+        self.all_required_parameters = {'b1': (0, 100), 'b2': (0, 100), 
+                                        'b3': (0, 100), 'b4': (0, 100),
+                                        'Phmax': (1,50),'Phmin': (1,50),
+                                        'Topt': (0,45), 'L': (1,30), 'h':(1,1000)}
         self._organize_parameters(parameters)
         #self._required_data = {'predictor_columns': ['site_id', 'year', 'doy', 'temperature'],
          #                      'predictors': ['pr','tasmin','tasmax']}
