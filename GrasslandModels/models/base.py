@@ -125,7 +125,7 @@ class BaseModel():
         if to_predict is None and isinstance(predictors, dict):
             # predictors is a dict containing data that can be
             # used directly in _apply_mode()
-            self._validate_formatted_predictors(predictors)
+            validation.validate_predictors(predictors, self._required_predictors)
 
         elif isinstance(to_predict, pd.DataFrame) and isinstance(predictors, pd.DataFrame):
             # New data to predict
@@ -167,60 +167,6 @@ class BaseModel():
             self.loss_function = loss_function
         else:
             raise TypeError('Unknown loss_function. Must be string or custom function')
-
-#    def _organize_predictors(self, observations, predictors, for_prediction):
-#        """Convert data to internal structure used by models
-#
-#        This function inside _base() is used for all the modes which
-#        have temperature as the only predictor variables (which is most of them). 
-#        Models which have other predictors have their own _organize_predictors() method.
-#        """
-#        if for_prediction:
-#            temperature_fitting, doy_series = utils.misc.temperature_only_data_prep(observations,
-#                                                                                    predictors,
-#                                                                                    for_prediction=for_prediction)
-#            return {'temperature': temperature_fitting,
-#                    'doy_series': doy_series}
-#        else:
-#            cleaned_observations, temperature_fitting, doy_series = utils.misc.temperature_only_data_prep(observations,
-#                                                                                                          predictors,
-#                                                                                                          for_prediction=for_prediction)
-#            self.fitting_predictors = {'temperature': temperature_fitting,
-#                                       'doy_series': doy_series}
-#            self.obs_fitting = cleaned_observations
-
-    def _validate_formatted_predictors(self, predictors):
-        """Make sure everything is valid.
-
-        This is used when pre-formatted data (as opposed to dataframes)
-        is passed to predict() or fit().
-
-        This function inside _base() is used for all the modes which
-        have temperature as the only predictor variables (which is most of them). 
-        Models which have other predictors have their own 
-        _validate_formatted_predictors() method.
-        """
-        # Don't allow any nan values in 2d temperature array
-        temp = predictors['temperature']
-        doy_series = predictors['doy_series']
-
-        if len(doy_series) != temp.shape[0]:
-            raise ValueError('temp axis 0 does not match doy_series')
-
-        if len(temp.shape) == 2:
-            if np.any(np.isnan(temp)):
-                raise ValueError('Nan values in temp array')
-
-        # A 3d array implies spatial data, where nan values are allowed if
-        # that location is *only* nan. (ie, somewhere over water)
-        elif len(temp.shape) == 3:
-            invalid_entries = np.logical_and(np.isnan(temp).any(0),
-                                             ~np.isnan(temp).all(0))
-            if np.any(invalid_entries):
-                raise ValueError('Nan values in some timeseries of 3d temp array')
-
-        else:
-            raise ValueError('temp array is unknown shape')
 
     def _organize_parameters(self, passed_parameters):
         """Interpret each passed parameter value to a model.
