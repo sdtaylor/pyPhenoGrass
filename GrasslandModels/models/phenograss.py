@@ -2,6 +2,7 @@ from . import utils
 from .base import BaseModel
 import numpy as np
 
+from . import phenograss_cython
 
 class PhenoGrass(BaseModel):
     """PhenoGrass Model
@@ -24,8 +25,103 @@ class PhenoGrass(BaseModel):
                                      'MAP'   : 'per_site',
                                      'Wcap'  : 'per_site',
                                      'Wp'    : 'per_site'}
+    
+    def _apply_model(self, version = 'cython', **kwargs):
+        if version == 'cython':
+            return self._apply_model_cython(**kwargs)
+        elif version == 'numpy':
+            return self._apply_model_numpy(**kwargs)
+        else:
+            raise ValueError('Unknown phenograss version: ' + version)
+    
+    def _apply_model_cython(self,
+                             # Site specific drivers
+                             precip,  # precip, Daily vector
+                             evap,    # potential ET, Daily vector
+                             #T,       # ? mean temp ? not actually used in phenograss.f90
+                             Ra,      # TOA radiation, MJ m-2 s-1, daily vector
+                             Tm,      # Running mean T with 15 day lag
+                             Wcap,    # field capacity, single value/site
+                             Wp,      # wilting point, single value/site
+                             MAP,     # Mean avg precip, used to scale model input(gcc) to output (fcover)
+                                      # fCover = GCC * MAP/ (MAP+h), where h is an estimated  parameter
+                             
+                             # Model parameters
+                             b1,  # Note b1 is set below to Wp as writtin the phenograss.f90. 
+                                   # TODO: sort that out
+                             b2,
+                             b3,
+                             b4,
+                             L,
+                             Phmin,
+                             Topt,
+                             Phmax,
+                             
+                             h = None, # This is from Eq. 1 to help scale the fCover. It's denoted a
+                                       # "slope" in the phenograss parameter files. 
+                             # Constants
+                             Tmin = 0,  # Maximum temperature of the growth response curve
+                             Tmax = 45,
+                             
+                             Vmin = 0.001, # Nees to be small non-zero value 
+                             Vmax = 1.,    # 100% cause GCC is scaled 0-1
+                             d    = 0,     # decay flag
+                             
+                             # Initial conditions
+                             W_initial = 0,
+                             Wstart    = 0,
+                             V_initial = 0.001,
+                             Sd        = 0,
+                             m         = 3600, # Not actaully used anywhere but in phenograss.f90
+                             
+                             # Normally just the V (vegatation cover) should be returned,
+                             # but for diagnostics use 'all' to get V, W, and Dtl
+                             return_vars = 'V'
+                             ):
+        """
+        This uses the compiled cython version of the model and is much faster
+        than the numpy version
+        """
+        L = int(L) # must be a whole number. any floats will be truncated.
+        
+        V, W, Dt = phenograss_cython.apply_model_cython(precip = precip,
+                                                        evap   = evap,
+                                                        Ra     = Ra,
+                                                        Tm     = Tm,
+                                                        Wcap   = Wcap,
+                                                        Wp     = Wp,
+                                                        MAP    = MAP,
+                                                        #b1     = b1,
+                                                        b2     = b2,
+                                                        b3     = b3,
+                                                        b4     = b4,
+                                                        L      = L,
+                                                        Phmin  = Phmin,
+                                                        Phmax  = Phmax,
+                                                        Topt   = Topt,
+                                                        h      = h,
+                                                        Tmin   = Tmin,
+                                                        Tmax   = Tmax,
+                                                        Vmin   = Vmin,
+                                                        Vmax   = Vmax,
+                                                        W_initial = W_initial,
+                                                        Wstart = Wstart,
+                                                        V_initial = V_initial,
+                                                        Sd = Sd,
+                                                        m = m)
+        
+        V, W, Dt = np.asarray(V), np.asarray(W), np.asarray(Dt)
+        
+        scaling_factor = MAP / (MAP + h)
+        V = V / scaling_factor
+        
+        if return_vars == 'V':
+            return V
+        elif return_vars == 'all':
+            return V, W, Dt
+        
 
-    def _apply_model(self,
+    def _apply_model_numpy(self,
                      # Site specific drivers
                      precip,  # precip, Daily vector
                      evap,    # potential ET, Daily vector
@@ -69,7 +165,11 @@ class PhenoGrass(BaseModel):
                      # but for diagnostics use 'all' to get V, W, and Dtl
                      return_vars = 'V'
                      ):
-        
+        """
+        This is the original model version using numpy arrays for everything. 
+        It's kinda slow because of the for loop, thus the cython version was
+        implemented.
+        """
         L = int(L) # must be a whole number. and floats will be truncated.
         
         # b1 should be a parameter, but in the phenograss fortran code
