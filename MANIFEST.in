@@ -1,0 +1,2 @@
+include GrasslandModels/data/site_metadata.csv
+include GrasslandModels/data/site_data.csv.gz
