@@ -29,7 +29,7 @@ def validate_predictors(predictors, required_predictors):
         if not isinstance(predictors[predictor_name], np.ndarray):
             raise ValueError('{p} Must be numpy array of type float32, even if a single value'.format(p=predictor_name))
         
-        if predictors[predictor_name] != np.float32:
+        if predictors[predictor_name].dtype != np.float32:
             raise ValueError('{p} Must be numpy array of type float32, even if a single value'.format(p=predictor_name))
         
         if predictor_type == 'per_timestep':
