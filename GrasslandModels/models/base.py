@@ -21,12 +21,13 @@ class BaseModel():
         """Estimate the parameters of a model
 
         Parameters:
-            observations : dataframe
-                pandas dataframe of phenology observations
-
-            predictors : dataframe
-                pandas dataframe of associated predictor variables such as
-                temperature, precipitation, and day length
+            observations: np.array 
+                Timeseries of the observations. Axis 0 should be the time axis,
+                with other axis corresponding to sites or locations. The shape
+                of this array must match the shape of any timeseries predictors.
+            
+            predictors : dict
+                dictionary of predictors specified by the model
 
             loss_function : str, or function
             
@@ -50,15 +51,16 @@ class BaseModel():
 
         """
 
-        validation.validate_predictors(predictors, self._required_data['predictor_columns'])
-        validation.validate_observations(observations)
+        validation.validate_predictors(predictors, self._required_predictors)
+        validation.validate_observations(observations, predictors)
         self._set_loss_function(loss_function)
         if len(self._parameters_to_estimate) == 0:
             raise RuntimeError('No parameters to estimate')
 
-        self._organize_predictors(predictors=predictors,
-                                  observations=observations,
-                                  for_prediction=False)
+
+        # Store these as they'll be used for fitting and subsequent predictions
+        self.fitting_predictors = predictors
+        self.obs_fitting = observations
 
         if debug:
             verbose = True
@@ -87,12 +89,6 @@ class BaseModel():
             print('Mean timing: {t} sec/iteration \n\n'.format(t=mean_time))
             self.debug = False
         self._fitted_params.update(self._fixed_parameters)
-
-        # Check predictions for 999, indicating a bad fit.
-        if np.any(self.predict() == 999):
-            warn('999 values in predictions, indicating lack of convergence '\
-                 'in model fitting. Perhaps try with different optimizer '\
-                 'values.')
 
     def predict(self, to_predict=None, predictors=None, **kwargs):
         """Make predictions
@@ -129,7 +125,7 @@ class BaseModel():
         if to_predict is None and isinstance(predictors, dict):
             # predictors is a dict containing data that can be
             # used directly in _apply_mode()
-            self._validate_formatted_predictors(predictors)
+            validation.validate_predictors(predictors, self._required_predictors)
 
         elif isinstance(to_predict, pd.DataFrame) and isinstance(predictors, pd.DataFrame):
             # New data to predict
@@ -171,60 +167,6 @@ class BaseModel():
             self.loss_function = loss_function
         else:
             raise TypeError('Unknown loss_function. Must be string or custom function')
-
-    def _organize_predictors(self, observations, predictors, for_prediction):
-        """Convert data to internal structure used by models
-
-        This function inside _base() is used for all the modes which
-        have temperature as the only predictor variables (which is most of them). 
-        Models which have other predictors have their own _organize_predictors() method.
-        """
-        if for_prediction:
-            temperature_fitting, doy_series = utils.misc.temperature_only_data_prep(observations,
-                                                                                    predictors,
-                                                                                    for_prediction=for_prediction)
-            return {'temperature': temperature_fitting,
-                    'doy_series': doy_series}
-        else:
-            cleaned_observations, temperature_fitting, doy_series = utils.misc.temperature_only_data_prep(observations,
-                                                                                                          predictors,
-                                                                                                          for_prediction=for_prediction)
-            self.fitting_predictors = {'temperature': temperature_fitting,
-                                       'doy_series': doy_series}
-            self.obs_fitting = cleaned_observations
-
-    def _validate_formatted_predictors(self, predictors):
-        """Make sure everything is valid.
-
-        This is used when pre-formatted data (as opposed to dataframes)
-        is passed to predict() or fit().
-
-        This function inside _base() is used for all the modes which
-        have temperature as the only predictor variables (which is most of them). 
-        Models which have other predictors have their own 
-        _validate_formatted_predictors() method.
-        """
-        # Don't allow any nan values in 2d temperature array
-        temp = predictors['temperature']
-        doy_series = predictors['doy_series']
-
-        if len(doy_series) != temp.shape[0]:
-            raise ValueError('temp axis 0 does not match doy_series')
-
-        if len(temp.shape) == 2:
-            if np.any(np.isnan(temp)):
-                raise ValueError('Nan values in temp array')
-
-        # A 3d array implies spatial data, where nan values are allowed if
-        # that location is *only* nan. (ie, somewhere over water)
-        elif len(temp.shape) == 3:
-            invalid_entries = np.logical_and(np.isnan(temp).any(0),
-                                             ~np.isnan(temp).all(0))
-            if np.any(invalid_entries):
-                raise ValueError('Nan values in some timeseries of 3d temp array')
-
-        else:
-            raise ValueError('temp array is unknown shape')
 
     def _organize_parameters(self, passed_parameters):
         """Interpret each passed parameter value to a model.
