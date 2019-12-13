@@ -103,3 +103,48 @@ def load_test_data(sites='all'):
                   'Wp'    : Wp}
     
     return GCC, site_vars
+
+
+
+
+def load_model(name):
+    """Load a model via a string
+
+    Options are ``['PhenoGrass']``
+    """
+    if not isinstance(name, str):
+        raise TypeError('name must be string, got' + type(name))
+        
+    if name == 'PhenoGrass':
+        return models.PhenoGrass
+    else:
+        raise ValueError('Unknown model name: ' + name)
+
+
+def load_model_parameters(model_info):
+    # Load a model from a model_info dictionary
+
+    # These ensemble methods have their own code for loading saved files
+    if model_info['model_name'] == 'BootstrapModel':
+        raise NotImplementedError('Ensembles not implemented yet')
+        model = models.BootstrapModel(parameters=model_info)
+    elif model_info['model_name'] == 'Ensemble':
+        raise NotImplementedError('Ensembles not implemented yet')
+        model = models.Ensemble(core_models=model_info)
+    else:
+        # For all other ones just need to pass the parameters
+        Model = load_model(model_info['model_name'])
+        model = Model(parameters=model_info['parameters'])
+
+    return model
+
+def load_saved_model(filename):
+    """Load a previously saved model file
+
+    Returns the model object with parameters preloaded.
+    """
+    if not isinstance(filename, str):
+        raise TypeError('filename must be string, got' + type(filename))
+
+    model_info = models.utils.misc.read_saved_model(filename)
+    return(load_model_parameters(model_info))
