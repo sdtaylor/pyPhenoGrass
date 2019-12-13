@@ -26,13 +26,16 @@ class PhenoGrass(BaseModel):
                                      'Wcap'  : 'per_site',
                                      'Wp'    : 'per_site'}
     
-    def _apply_model(self, version = 'cython', **kwargs):
-        if version == 'cython':
-            return self._apply_model_cython(**kwargs)
-        elif version == 'numpy':
-            return self._apply_model_numpy(**kwargs)
+        # Default to the faster cython version.
+        self.set_internal_method(method='cython')
+    
+    def set_internal_method(self, method = 'cython'):
+        if method == 'cython':
+            self._apply_model = self._apply_model_cython
+        elif method == 'numpy':
+            self._apply_model = self._apply_model_numpy
         else:
-            raise ValueError('Unknown phenograss version: ' + version)
+            raise ValueError('Unknown phenograss method: ' + method)
     
     def _apply_model_cython(self,
                              # Site specific drivers
