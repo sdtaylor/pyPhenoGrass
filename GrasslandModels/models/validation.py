@@ -25,19 +25,32 @@ def validate_predictors(predictors, required_predictors):
         if predictor_name not in predictors:
             raise ValueError('Missing {p} in predictors'.format(p=predictor_name))
         
-        # Must by numpy arrays
+        # Must be float32 numpy arrays
         if not isinstance(predictors[predictor_name], np.ndarray):
-            raise ValueError('{p} Must be numpy array, even if a single value'.format(p=predictor_name))
+            raise ValueError('{p} Must be numpy array of type float32, even if a single value'.format(p=predictor_name))
+        
+        if predictors[predictor_name] != np.float32:
+            raise ValueError('{p} Must be numpy array of type float32, even if a single value'.format(p=predictor_name))
         
         if predictor_type == 'per_timestep':
             timeseries_shapes.append(predictors[predictor_name].shape)
         elif predictor_type == 'per_site':
             site_level_shapes.append(predictors[predictor_name].shape)
-        
-        if np.unique(timeseries_shapes).shape != (1,):
+    
+    # Must all be equal shapes
+    for i in range(len(timeseries_shapes)):
+        if timeseries_shapes[i] != timeseries_shapes[0]:
             raise ValueError('Uneven shapes for timeseries variables')
-        #if np.unique(site_level_shapes).shape != (0,):
-        #    raise ValueError('Uneven shapes for site_level variables')
+    
+    for i in range(len(site_level_shapes)):
+        if site_level_shapes[i] != site_level_shapes[0]:
+            raise ValueError('Uneven shapes for site_level variables')
+            
+    # Site level variables that have a single value per site. 
+    # They must match the shape, minus the time axis, of the timeseries vars
+    if site_level_shapes[0][-1] != timeseries_shapes[0][-1]:
+        raise ValueError('site level length does not match timeseries site number')
+    
 
 def validate_observations(observations, predictors):
     """ Validate the required observations. It should be a numpy array
