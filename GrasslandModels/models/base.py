@@ -15,7 +15,7 @@ class BaseModel():
         self.doy_series = None
         self.debug = False
 
-    def fit(self, observations, predictors, loss_function='rmse',
+    def fit(self, observations, predictors, loss_function='nan_rmse',
             method='DE', optimizer_params='practical',
             verbose=False, debug=False, **kwargs):
         """Estimate the parameters of a model
@@ -31,9 +31,9 @@ class BaseModel():
 
             loss_function : str, or function
             
-            A string for built in loss functions (currently only 'rmse'), 
-            or a customized function which accpepts 2 arguments. obs and pred,
-            both numpy arrays of the same shape
+            A string for built in loss functions, or a customized function 
+            which accpepts 2 arguments. obs and pred, both numpy arrays of 
+            the same shape
             
             method : str
                 Optimization method to use. Either 'DE' or 'BF' for differential
@@ -90,62 +90,41 @@ class BaseModel():
             self.debug = False
         self._fitted_params.update(self._fixed_parameters)
 
-    def predict(self, to_predict=None, predictors=None, **kwargs):
+    def predict(self, predictors=None, **kwargs):
         """Make predictions
 
-        Predict the DOY given predictor data and associated site/year info.
+        Make a prediction given predictor data..
         All model parameters must be set either in the initial model call
-        or by running fit(). If to_predict and predictors are not set, then
-        this will return predictions for the data used in fitting (if available)
+        or by running fit(). If no new data is passed then this will predict
+        based off fitting data (if a fit was run)
 
         Parameters:
-            to_predict : dataframe, optional
-                pandas dataframe of site/year combinations to predict from
-                the given predictor data. just like the observations 
-                dataframe used in fit() but (optionally) without the doy column
-
-            predictors : dataframe, optional
-                pandas dataframe in the format specific to this package
+            predictors : dict
+                dictionary of predictors specified by the model
 
         Returns:
             predictions : array
-                1D array the same length of to_predict. Or if to_predict
-                is not used, the same length as observations used in fitting.
+                array the same shape of timeseries values in predictors. 
+                Or if predictors=None, the same shape as observations used in fitting.
 
         """
         self._check_parameter_completeness()
 
-        """
-        valid arg combinations
-        {'to_predict':None,'predictors':dict}
-        {'to_predict':pd.DataFrame,'predictors':pd.DataFrame}
-        {'to_predict':None,'predictors':None}
-        """
-
-        if to_predict is None and isinstance(predictors, dict):
+        if isinstance(predictors, dict):
             # predictors is a dict containing data that can be
             # used directly in _apply_mode()
             validation.validate_predictors(predictors, self._required_predictors)
 
-        elif isinstance(to_predict, pd.DataFrame) and isinstance(predictors, pd.DataFrame):
-            # New data to predict
-            validation.validate_predictors(predictors, self._required_data['predictor_columns'])
-            validation.validate_observations(to_predict, for_prediction=True)
-
-            predictors = self._organize_predictors(observations=to_predict,
-                                                   predictors=predictors,
-                                                   for_prediction=True)
-
-        elif to_predict is None and predictors is None:
+        elif predictors is None:
             # Making predictions on data used for fitting
             if self.obs_fitting is not None and self.fitting_predictors is not None:
                 predictors = self.fitting_predictors
             else:
-                raise TypeError('No to_predict + temperature passed, and' +
+                raise TypeError('No new new predictors passed, and' +
                                 'no fitting done. Nothing to predict')
         else:
-            raise TypeError('Invalid arguments. to_predict and predictors ' +
-                            'must both be pandas dataframes of new data to predict,' +
+            raise TypeError('Invalid arguments. predictors must be a dictionary ' +
+                            'of new data to predict,' +
                             'or set to None to predict the data used for fitting')
 
         predictions = self._apply_model(**deepcopy(predictors),
@@ -317,15 +296,14 @@ class BaseModel():
         if not self._parameters_are_set():
             raise RuntimeError('Not all parameters set')
 
-    def score(self, metric='rmse', doy_observed=None,
-              to_predict=None, predictors=None):
-        """Evaluate a prediction given observed doy values
+    def score(self, metric='nan_rmse', observations=None, predictors=None):
+        """Evaluate a prediction given observed values
 
         Given no arguments this will return the RMSE on the dataset used for
         fitting (if fitting was done).
-        To evaluate a new set of data set ``to_predict``, and ``predictors``
+        To evaluate a new set of data set pass ``observations`` and ``predictors``,
         as used in ``model.predict()``. The predictions from these will be
-        evluated against the true values in ``doy_observed``.
+        evluated against the true values in ``observations``.
 
         Metrics available are root mean square error (``rmse``) and AIC (``aic``).
         For AIC the number of parameters in the model is set to the number of
@@ -337,46 +315,39 @@ class BaseModel():
                 The metric used either 'rmse' for the root mean square error,
                 or 'aic' for akaike information criteria.
                 
-            doy_observed : numpy array, optional
-                The true doy values to evaluate with. This must be a numpy
-                array the same length as the number of rows in to_predict
-
-            to_predict : dataframe, optional
-                pandas dataframe of site/year combinations to predict from
-                the given predictor data. just like the observations 
-                dataframe used in fit() but (optionally) without the doy column
-
-            predictors : dataframe, optional
-                pandas dataframe in the format specific to this package
+            observations: np.array 
+                Timeseries of the observations. Axis 0 should be the time axis,
+                with other axis corresponding to sites or locations. The shape
+                of this array must match the shape of any timeseries predictors.
+            
+            predictors : dict
+                dictionary of predictors specified by the model
         
         Returns:
             The score as a float
         """
-        self._check_parameter_completeness()
-
-        if doy_observed is None:
-            doy_observed = self.obs_fitting
-        elif isinstance(doy_observed, np.ndarray):
-            if not isinstance(to_predict, pd.DataFrame) or not isinstance(predictors, pd.DataFrame):
-                raise TypeError('to_predict and predictors must be pandas dataframes if ',
-                                'evaluating new data')
-
-            if doy_observed.shape[0] != to_predict.shape[0]:
-                raise TypeError('The length of doy_observed must be equal to the',
-                                'length of to_predict.')
-
-        else:
-            raise TypeError('Unknown doy_observed parameter type. expected ndarray, got ' + str(type(doy_observed)))
-
-        doy_estimated = self.predict(to_predict=to_predict,
-                                     predictors=predictors)
+        # If both args are none use fitting data for scoring, if available.
+        if all([observations is None, predictors is None]):
+            if self.obs_fitting is not None and self.fitting_predictors is not None:
+                observations = self.obs_fitting
+                predictors   = self.fitting_predictors
+        
+            else:
+                raise TypeError('No observations + predictors passed, and' +
+                                'no fitting done. Nothing to score')
+        
+        # But if 1 is set then the other must be set. 
+        elif any([observations is None, predictors is None]):
+            raise TypeError('Observations + predictors must both be set for scoring')
+            
+        estimated = self.predict(predictors=predictors)
 
         error_function = utils.optimize.get_loss_function(method=metric)
 
         if metric == 'aic':
-            error = error_function(doy_observed, doy_estimated,
+            error = error_function(observations, estimated,
                                    n_param=len(self._parameters_to_estimate))
         else:
-            error = error_function(doy_observed, doy_estimated)
+            error = error_function(observations, estimated)
 
         return error
