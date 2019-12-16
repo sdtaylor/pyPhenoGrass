@@ -12,6 +12,16 @@ def nan_rmse_loss(obs, pred):
 def aic_loss(obs, pred, n_param):
     return len(obs) * np.log(np.mean((obs - pred)**2)) + 2 * (n_param + 1)
 
+def mean_cvmae_loss(obs, pred):
+    """Mean coefficient of variation.
+    See https://github.com/sdtaylor/GrasslandModels/issues/9
+    
+    Assumes axis 1 is the sites
+    """
+    mean_site_cover = np.nanmean(obs, axis=0)
+    cvmae = np.nansum(np.abs(obs - pred), axis=0) / mean_site_cover
+    return cvmae.mean()
+
 def get_loss_function(method):
     if method == 'rmse':
         return rmse_loss
@@ -19,6 +29,8 @@ def get_loss_function(method):
         return aic_loss
     elif method == 'nan_rmse':
         return nan_rmse_loss
+    elif method == 'mean_cvmae':
+        return mean_cvmae_loss
     else:
         raise ValueError('Unknown loss method: ' + method)
 
