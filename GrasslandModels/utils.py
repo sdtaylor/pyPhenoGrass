@@ -143,6 +143,12 @@ def load_model(name):
         
     if name == 'PhenoGrass':
         return models.PhenoGrass
+    if name == 'CholerPR1':
+        return models.CholerPR1
+    if name == 'CholerPR2':
+        return models.CholerPR2
+    if name == 'CholerPR3':
+        return models.CholerPR3
     else:
         raise ValueError('Unknown model name: ' + name)
 
