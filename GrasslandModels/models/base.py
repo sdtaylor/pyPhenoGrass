@@ -50,18 +50,9 @@ class BaseModel():
                 display various internals
 
         """
-
-        validation.validate_predictors(predictors, self._required_predictors)
-        validation.validate_observations(observations, predictors)
-        self._set_loss_function(loss_function)
-        if len(self._parameters_to_estimate) == 0:
-            raise RuntimeError('No parameters to estimate')
-
-
-        # Store these as they'll be used for fitting and subsequent predictions
-        self.fitting_predictors = predictors
-        self.obs_fitting = observations
-
+        self.fit_load(observations = observations, predictors = predictors,
+                      loss_function = loss_function)
+    
         if debug:
             verbose = True
             self.debug = True
@@ -90,6 +81,27 @@ class BaseModel():
             self.debug = False
         self._fitted_params.update(self._fixed_parameters)
 
+    def fit_load(self, observations, predictors, loss_function='nan_rmse'):
+        """
+        Validate and load the data in preperation for model fitting.
+        """
+        
+        validation.validate_predictors(predictors, self._required_predictors)
+        validation.validate_observations(observations, predictors)
+        self._set_loss_function(loss_function)
+        if len(self._parameters_to_estimate) == 0:
+            raise RuntimeError('No parameters to estimate')
+        
+        # Store these as they'll be used for fitting and subsequent predictions
+        self.fitting_predictors = predictors
+        self.obs_fitting = observations
+    
+    def required_predictors(self):
+        """
+        Get a list of the required model predictors
+        """
+        return list(self._required_predictors.keys())
+    
     def predict(self, predictors=None, **kwargs):
         """Make predictions
 
