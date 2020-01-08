@@ -1,2 +1,3 @@
 include GrasslandModels/data/site_metadata.csv
 include GrasslandModels/data/site_data.csv.gz
+include GrasslandModels/data/prefit_models/*.json
