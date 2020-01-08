@@ -143,6 +143,8 @@ def load_model(name):
         
     if name == 'PhenoGrass':
         return models.PhenoGrass
+    if name == 'PhenoGrassNDVI':
+        return models.PhenoGrassNDVI
     if name == 'CholerPR1':
         return models.CholerPR1
     if name == 'CholerPR2':

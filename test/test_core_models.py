@@ -2,7 +2,11 @@ from GrasslandModels import models, utils
 import pytest
 import numpy as np
 
-core_model_names = ['PhenoGrass','CholerPR3','CholerPR3','CholerPR3']
+core_model_names = ['PhenoGrass',
+                    'PhenoGrassNDVI',
+                    'CholerPR1',
+                    'CholerPR2',
+                    'CholerPR3']
 
 GCC, predictor_vars = utils.load_test_data()
 
