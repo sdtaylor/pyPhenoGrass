@@ -182,3 +182,31 @@ def load_saved_model(filename):
 
     model_info = models.utils.misc.read_saved_model(filename)
     return(load_model_parameters(model_info))
+
+
+def load_prefit_model(prefit_model_name):
+    """Load a prefit model model
+    Options are:
+        'CholerPR1-original' - The CholerPR1 model parameters specified in Choler et al. 2011
+        'CholerPR2-original' - The CholerPR2 model parameters specified in Choler et al. 2011
+        'PhenoGrass-original' - The PhenoGrass parameters specified in Hufkins et al. 2016
+    
+    Returns a fitted model object.
+    """
+    if not isinstance(prefit_model_name, str):
+        raise TypeError('prefit_model_name must be string, got' + type(prefit_model_name))
+        
+    if prefit_model_name == 'CholerPR1-original':
+        model_filepath = pkg_resources.resource_filename(__name__, 'data/prefit_models/cholerPR1_original.json')
+        return load_saved_model(model_filepath)
+    
+    if prefit_model_name == 'CholerPR2-original':
+        model_filepath = pkg_resources.resource_filename(__name__, 'data/prefit_models/cholerPR1_original.json')
+        return load_saved_model(model_filepath)
+    
+    if prefit_model_name == 'PhenoGrass-original':
+        model_filepath = pkg_resources.resource_filename(__name__, 'data/prefit_models/phenograss-original.json')
+        return load_saved_model(model_filepath)
+    
+    else:
+        raise ValueError('Unknown prefit model name: ' + prefit_model_name)
