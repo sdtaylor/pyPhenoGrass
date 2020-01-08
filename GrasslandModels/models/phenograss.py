@@ -352,7 +352,7 @@ class PhenoGrassNDVI(BaseModel):
                                                         Tm     = Tm,
                                                         Wcap   = Wcap,
                                                         Wp     = Wp,
-                                                        MAP    = Wp, # TODO: remove map as arg, but need a placeholder till then.
+                                                        MAP    = Wp, # TODO: remove MAP and h as args, but need a placeholder till then.
                                                         #b1     = b1,
                                                         b2     = b2,
                                                         b3     = b3,
