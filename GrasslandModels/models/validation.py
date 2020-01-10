@@ -48,8 +48,9 @@ def validate_predictors(predictors, required_predictors):
             
     # Site level variables that have a single value per site. 
     # They must match the shape, minus the time axis, of the timeseries vars
-    if site_level_shapes[0][-1] != timeseries_shapes[0][-1]:
-        raise ValueError('site level length does not match timeseries site number')
+    if len(site_level_shapes)>0:
+        if site_level_shapes[0][-1] != timeseries_shapes[0][-1]:
+            raise ValueError('site level length does not match timeseries site number')
     
 
 def validate_observations(observations, predictors):

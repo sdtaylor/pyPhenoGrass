@@ -151,6 +151,8 @@ def load_model(name):
         return models.CholerPR2
     if name == 'CholerPR3':
         return models.CholerPR3
+    if name == 'Naive':
+        return models.Naive
     else:
         raise ValueError('Unknown model name: ' + name)
 
