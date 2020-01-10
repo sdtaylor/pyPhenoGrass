@@ -46,6 +46,20 @@ def test_prefit_model_loading():
     prefit_models = ['CholerPR1-original','CholerPR2-original','PhenoGrass-original']
     models = [utils.load_prefit_model(n) for n in prefit_models]
     assert all([isinstance(m.get_params(), dict) for m in models])
+
+def test_metadata_save_load():
+    new_entries = {'entry1':'123',
+                   'entry2':'123',
+                   'entry3':'123'}
+    
+    m = utils.load_prefit_model('CholerPR1-original')
+    m.clear_metadata()
+    m.update_metadata(new_entries)
+    m.save_params('test_model_params.json')
+    
+    m2 = utils.load_saved_model('test_model_params.json')
+    assert new_entries == m2.metadata
+    
     
 ########################################################################
 # Some PhenoGrass specific tests

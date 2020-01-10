@@ -14,6 +14,7 @@ class BaseModel():
         self.temperature_fitting = None
         self.doy_series = None
         self.debug = False
+        self.metadata = {}
 
     def fit(self, observations, predictors, loss_function='nan_rmse',
             method='DE', optimizer_params='practical',
@@ -168,22 +169,8 @@ class BaseModel():
         parameters_to_estimate = {}
         fixed_parameters = {}
 
-        # Parameter can also be a file to load
-        if isinstance(passed_parameters, str):
-            model_info = utils.misc.read_saved_model(model_file=passed_parameters)
-            passed_parameters = model_info['parameters']
-
-            if type(self).__name__ != model_info['model_name']:
-                raise RuntimeWarning('Saved model file does not match model class. ' +
-                                     'Saved file is {a}, this model is {b}'.format(a=model_info['model_name'],
-                                                                                   b=type(self).__name__))
-            # all parameters that were saved should be fixed numeric values
-            for parameter, value in passed_parameters.items():
-                if not isinstance(value * 1.0, float):
-                    raise TypeError('Expected a set value for parameter {p} in saved file, got {v}'.format(p=parameter, v=value))
-        else:
-            if not isinstance(passed_parameters, dict):
-                raise TypeError('passed_parameters must be either a dictionary or string')
+        if not isinstance(passed_parameters, dict):
+            raise TypeError('passed_parameters must be either a dictionary or string')
 
         # This is all the required parameters updated with any
         # passed parameters. This includes any invalid ones,
@@ -229,7 +216,8 @@ class BaseModel():
 
     def _get_model_info(self):
         return {'model_name': type(self).__name__,
-                'parameters': self._fitted_params}
+                'parameters': self._fitted_params,
+                'metadata'  : self.metadata}
 
     def save_params(self, filename, overwrite=False):
         """Save the parameters for a model
@@ -249,6 +237,30 @@ class BaseModel():
                                      model_file=filename,
                                      overwrite=overwrite)
 
+    def update_metadata(self, new_params=None, **kwargs):
+        """Add 1 or more metdata entries.
+        
+        Metdata entires can be set to anything and do not affect model 
+        functionality. They are saved in the model file and can be accessed
+        by the model.metdata dictionary.
+        
+        Update via a single dictionary or several parameters as arguments.
+        Any prior entries with the same name will be overwritten.
+        
+        model.update_metdatda(fit_date='2020-01-02', training_set='set1')
+        """
+        if new_params is not None:
+            if isinstance(new_params, dict):
+                self.metadata.update(new_params)
+            else:
+                raise TypeError('new_params must be a dictionary')
+        self.metadata.update(kwargs)
+    
+    def clear_metadata(self):
+        """Delete all metadata entries
+        """
+        self.metadata = {}
+        
     def _get_initial_bounds(self):
         # TODO: Probably just return params to estimate + fixed ones
         raise NotImplementedError()

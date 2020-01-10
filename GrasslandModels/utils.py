@@ -169,6 +169,11 @@ def load_model_parameters(model_info):
         # For all other ones just need to pass the parameters
         Model = load_model(model_info['model_name'])
         model = Model(parameters=model_info['parameters'])
+        # Older model files may not have a metadata entry
+        try:
+            model.update_metadata(**model_info['metadata'])
+        except:
+            pass
 
     return model
 
