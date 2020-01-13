@@ -4,9 +4,6 @@ from scipy import optimize
 
 
 def rmse_loss(obs, pred):
-    return np.sqrt(np.mean((obs - pred)**2))
-
-def nan_rmse_loss(obs, pred):
     return np.sqrt(np.nanmean((obs - pred)**2))
 
 def aic_loss(obs, pred, n_param):
@@ -27,8 +24,6 @@ def get_loss_function(method):
         return rmse_loss
     elif method == 'aic':
         return aic_loss
-    elif method == 'nan_rmse':
-        return nan_rmse_loss
     elif method == 'mean_cvmae':
         return mean_cvmae_loss
     else:

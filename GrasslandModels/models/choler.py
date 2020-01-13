@@ -14,9 +14,7 @@ class CholerPR1(BaseModel):
         self._organize_parameters(parameters)
         #self._required_data = {'predictor_columns': ['site_id', 'year', 'doy', 'temperature'],
          #                      'predictors': ['pr','tasmin','tasmax']}
-        self._required_predictors = {'precip': 'per_timestep',
-                                     'evap'  : 'per_timestep',
-                                     'Wcap'  : 'per_site'}
+        self._required_predictors = {'precip': 'per_timestep'}
 
         # Default to the faster cython version.
         self.set_internal_method(method='numpy')
@@ -32,11 +30,11 @@ class CholerPR1(BaseModel):
     def _apply_model_numpy(self,
                          # Site specific drivers
                          precip,  # precip, Daily vector
-                         evap,    # potential ET, Daily vector
+                         #evap,    # potential ET, Daily vector
                          #T,       # ? mean temp ? not actually used in phenograss.f90
                          #Ra,      # TOA radiation, MJ m-2 s-1, daily vector
                          #Tm,      # Running mean T with 15 day lag
-                         Wcap,    # field capacity, single value/site
+                         #Wcap,    # field capacity, single value/site
                          #Wp,      # wilting point, single value/site
                          #MAP,     # Mean avg precip, used to scale model input(gcc) to output (fcover)
                                   # fCover = GCC * MAP/ (MAP+h), where h is an estimated  parameter
@@ -80,8 +78,9 @@ class CholerPR1(BaseModel):
             
             # Site level vars such as lagged plant-water and
             # temp responses
-            Dtl  = np.empty_like(Wcap)
-            Dtl1 = np.empty_like(Wcap)
+            # Initialize empty to the shape (,n_sites)
+            Dtl  = np.empty_like(precip[0])
+            Dtl1 = np.empty_like(precip[0])
             
             n_timesteps = precip.shape[0] - 1
             
