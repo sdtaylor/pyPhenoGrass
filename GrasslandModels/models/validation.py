@@ -52,6 +52,12 @@ def validate_predictors(predictors, required_predictors):
         if site_level_shapes[0][-1] != timeseries_shapes[0][-1]:
             raise ValueError('site level length does not match timeseries site number')
     
+    # No extraneous variables please
+    unknown_predictors = [p for p in predictors.keys() if p not in required_predictors]
+    if len(unknown_predictors)>0:
+        raise ValueError('Unknown predictors passed to model. See required predictors\n'+
+                         'for this model using model.required_predictors()\n'+
+                         'Unknown predictors: ' +str(unknown_predictors))
 
 def validate_observations(observations, predictors):
     """ Validate the required observations. It should be a numpy array

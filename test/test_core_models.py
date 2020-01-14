@@ -82,6 +82,21 @@ def test_shape_validation3():
     # Drop a single site of gcc data
     with pytest.raises(ValueError):
         m.fit(GCC[:,:-1], predictor_vars, optimizer_params = quick_testing_params)
+
+def test_predictor_validation1():
+    # Raise error when not all predictors are passed
+    m = utils.load_model('PhenoGrass')()
+    data_with_missing_var = predictor_vars.copy()
+    _ = data_with_missing_var.pop('precip')
+    with pytest.raises(ValueError):
+        m.fit(GCC, data_with_missing_var, optimizer_params = quick_testing_params)
+        
+def test_predictor_validation2():
+    # Raise error when unknown predictors are pass
+    # CholerPR does not need everything
+    m = utils.load_model('CholerPR1')()
+    with pytest.raises(ValueError):
+        m.fit(GCC, predictor_vars, optimizer_params = quick_testing_params)
         
 ########################################################################
 # Some PhenoGrass specific tests
