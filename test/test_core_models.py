@@ -60,8 +60,29 @@ def test_metadata_save_load():
     
     m2 = utils.load_saved_model('test_model_params.json')
     assert new_entries == m2.metadata
-    
-    
+
+def test_shape_validation1():
+    m = utils.load_model('PhenoGrass')()
+    uneven_data = predictor_vars.copy()
+    # Drop a single site of mean avg precip data
+    uneven_data['MAP'] = uneven_data['MAP'][:-1]
+    with pytest.raises(ValueError):
+        m.fit(GCC, uneven_data, optimizer_params = quick_testing_params)
+
+def test_shape_validation2():
+    m = utils.load_model('PhenoGrass')()
+    uneven_data = predictor_vars.copy()
+    # Drop a single timestep of evapotranspiration data
+    uneven_data['evap'] = uneven_data['evap'][:-1]
+    with pytest.raises(ValueError):
+        m.fit(GCC, uneven_data, optimizer_params = quick_testing_params)
+        
+def test_shape_validation3():
+    m = utils.load_model('PhenoGrass')()
+    # Drop a single site of gcc data
+    with pytest.raises(ValueError):
+        m.fit(GCC[:,:-1], predictor_vars, optimizer_params = quick_testing_params)
+        
 ########################################################################
 # Some PhenoGrass specific tests
 def test_phenograss_fit():
