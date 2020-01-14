@@ -56,7 +56,7 @@ def test_metadata_save_load():
     m = utils.load_prefit_model('CholerPR1-original')
     m.clear_metadata()
     m.update_metadata(new_entries)
-    m.save_params('test_model_params.json')
+    m.save_params('test_model_params.json', overwrite = True)
     
     m2 = utils.load_saved_model('test_model_params.json')
     assert new_entries == m2.metadata

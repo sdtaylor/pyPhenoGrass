@@ -10,7 +10,7 @@ def apply_model_cython(
                  float[:,:] Tm,      # Running mean T with 15 day lag
                  float[:] Wcap,    # field capacity, single value/site
                  float[:] Wp,      # wilting point, single value/site
-                 float[:] MAP,     # Mean avg precip, used to scale model input(gcc) to output (fcover)
+                 #float[:] MAP,     # Mean avg precip, used to scale model input(gcc) to output (fcover)
                           # fCover = GCC * MAP/ (MAP+h), where h is an estimated  parameter
                  
                  # Model parameters
@@ -24,8 +24,9 @@ def apply_model_cython(
                  float Topt,
                  float Phmax,
                  
-                 float h, # This is from Eq. 1 to help scale the fCover. It's denoted a
-                           # "slope" in the phenograss parameter files. 
+                 # float h, # This is from Eq. 1 to help scale the fCover. It's denoted a
+                            # "slope" in the phenograss parameter files. 
+                            # This scaling is done on the numpy side 
                  # Constants
                  float Tmin = 0.,  # Maximum temperature of the growth response curve
                  float Tmax = 45.,

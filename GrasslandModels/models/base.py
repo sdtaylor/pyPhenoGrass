@@ -16,7 +16,7 @@ class BaseModel():
         self.debug = False
         self.metadata = {}
 
-    def fit(self, observations, predictors, loss_function='nan_rmse',
+    def fit(self, observations, predictors, loss_function='rmse',
             method='DE', optimizer_params='practical',
             verbose=False, debug=False, **kwargs):
         """Estimate the parameters of a model
@@ -82,7 +82,7 @@ class BaseModel():
             self.debug = False
         self._fitted_params.update(self._fixed_parameters)
 
-    def fit_load(self, observations, predictors, loss_function='nan_rmse'):
+    def fit_load(self, observations, predictors, loss_function='rmse'):
         """
         Validate and load the data in preperation for model fitting.
         """
@@ -320,7 +320,7 @@ class BaseModel():
         if not self._parameters_are_set():
             raise RuntimeError('Not all parameters set')
 
-    def score(self, metric='nan_rmse', observations=None, predictors=None):
+    def score(self, metric='rmse', observations=None, predictors=None):
         """Evaluate a prediction given observed values
 
         Given no arguments this will return the RMSE on the dataset used for
