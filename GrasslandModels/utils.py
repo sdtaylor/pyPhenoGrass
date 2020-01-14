@@ -136,7 +136,8 @@ def load_test_data(sites='all', variables='all'):
 def load_model(name):
     """Load a model via a string
 
-    Options are ``['PhenoGrass']``
+    Options are ``['PhenoGrass','PhenoGrassNDVI','CholerPR1','CholerPR2',
+                   'CholerPR3','Naive']``
     """
     if not isinstance(name, str):
         raise TypeError('name must be string, got' + type(name))
