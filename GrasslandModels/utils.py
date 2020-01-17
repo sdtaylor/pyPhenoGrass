@@ -209,7 +209,7 @@ def load_prefit_model(prefit_model_name):
         return load_saved_model(model_filepath)
     
     if prefit_model_name == 'CholerPR2-original':
-        model_filepath = pkg_resources.resource_filename(__name__, 'data/prefit_models/cholerPR1_original.json')
+        model_filepath = pkg_resources.resource_filename(__name__, 'data/prefit_models/cholerPR2_original.json')
         return load_saved_model(model_filepath)
     
     if prefit_model_name == 'PhenoGrass-original':
