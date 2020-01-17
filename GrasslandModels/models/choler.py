@@ -337,10 +337,6 @@ class CholerPR3(BaseModel):
                 d = (Dtl <= Dtl1) * 1
                 
                 # Soil water
-                W[i+1] = W[i] + precip[i] - b4 * ((Dt[i]/(Wcap - b1))**2) * evap[i]
-                W[i+1] = np.maximum(0, np.minimum(Wcap, W[i+1]))
-                
-                # Soil water
                 W[i+1] = W[i] + precip[i] - (1 - V[i]) * ((Dt[i]/(Wcap - b1))**2) * evap[i] - V[i]* b4 *Dt[i]
                 W[i+1] = np.maximum(0, np.minimum(Wcap, W[i+1]))
                 
