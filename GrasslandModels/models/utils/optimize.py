@@ -16,7 +16,7 @@ def mean_cvmae_loss(obs, pred):
     Assumes axis 1 is the sites
     """
     mean_site_cover = np.nanmean(obs, axis=0)
-    cvmae = np.nansum(np.abs(obs - pred), axis=0) / mean_site_cover
+    cvmae = np.nanmean(np.abs(obs - pred), axis=0) / mean_site_cover
     return cvmae.mean()
 
 def get_loss_function(method):
