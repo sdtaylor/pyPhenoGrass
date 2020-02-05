@@ -64,12 +64,15 @@ class BaseModel():
         if verbose:
             fitting_start = time.time()
 
-        self._fitted_params = utils.optimize.fit_parameters(function_to_minimize=self._scipy_error,
-                                                            bounds=self._scipy_bounds(),
-                                                            method=method,
-                                                            results_translator=self._translate_scipy_parameters,
-                                                            optimizer_params=optimizer_params,
-                                                            verbose=verbose)
+        fitted_params, fitting_info = utils.optimize.fit_parameters(function_to_minimize=self._scipy_error,
+                                                                      bounds=self._scipy_bounds(),
+                                                                      method=method,
+                                                                      results_translator=self._translate_scipy_parameters,
+                                                                      optimizer_params=optimizer_params,
+                                                                      verbose=verbose)
+        self._fitted_params = fitted_params
+        self.update_metadata(fitting_info = fitting_info)
+        
         if verbose:
             total_fit_time = round(time.time() - fitting_start, 5)
             print('Total model fitting time: {s} sec.\n'.format(s=total_fit_time))

@@ -149,7 +149,8 @@ def fit_parameters(function_to_minimize, bounds, method, results_translator,
         optimize_output = optimize.differential_evolution(function_to_minimize,
                                                           bounds=bounds,
                                                           **optimizer_params)
-        fitted_parameters = results_translator(optimize_output['x'])
+        fitted_parameters = results_translator(optimize_output.pop('x'))
+        optimize_output = dict(optimize_output)
 
     elif method == 'BH':
         optimizer_params = validate_optimizer_parameters(optimizer_method=method,
@@ -163,8 +164,9 @@ def fit_parameters(function_to_minimize, bounds, method, results_translator,
                                                 **optimizer_params,
                                                 minimizer_kwargs={'method': 'L-BFGS-B',
                                                                   'bounds': bounds})
-        fitted_parameters = results_translator(optimize_output['x'])
-
+        fitted_parameters = results_translator(optimize_output.pop('x'))
+        optimize_output = dict(optimize_output)
+        
     elif method == 'SE':
         raise NotImplementedError('Simulated Annealing not working yet')
     elif method == 'BF':
@@ -179,11 +181,16 @@ def fit_parameters(function_to_minimize, bounds, method, results_translator,
                                          **optimizer_params)
 
         fitted_parameters = results_translator(optimize_output)
+        optimize_output = {}
+        
     else:
         raise ValueError('Uknown optimizer method: ' + str(method))
 
+    fitting_info = {'method'           : method,
+                    'input_parameters' : optimizer_params,
+                    'optimize_output'  : optimize_output}
     if verbose:
         print('Optimizer method: {x}\n'.format(x=method))
         print('Optimizer parameters: \n {x}\n'.format(x=optimizer_params))
 
-    return fitted_parameters
+    return fitted_parameters, fitting_info
