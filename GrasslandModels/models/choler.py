@@ -21,7 +21,7 @@ class CholerPR1(BaseModel):
     
     def set_internal_method(self, method = 'numpy'):
         if method == 'cython':
-            self._apply_model = self._apply_model_cython
+            raise NotImplementedError('cython method not implemented for this model')
         elif method == 'numpy':
             self._apply_model = self._apply_model_numpy
         else:
@@ -136,7 +136,7 @@ class CholerPR2(BaseModel):
     
     def set_internal_method(self, method = 'numpy'):
         if method == 'cython':
-            self._apply_model = self._apply_model_cython
+            raise NotImplementedError('cython method not implemented for this model')
         elif method == 'numpy':
             self._apply_model = self._apply_model_numpy
         else:
@@ -255,7 +255,7 @@ class CholerPR3(BaseModel):
     
     def set_internal_method(self, method = 'numpy'):
         if method == 'cython':
-            self._apply_model = self._apply_model_cython
+            raise NotImplementedError('cython method not implemented for this model')
         elif method == 'numpy':
             self._apply_model = self._apply_model_numpy
         else:
