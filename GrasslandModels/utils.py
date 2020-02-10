@@ -156,6 +156,14 @@ def load_model(name):
         return models.CholerMPR2
     if name == 'CholerMPR3':
         return models.CholerMPR3
+    if name == 'CholerM1A':
+        return models.CholerM1A
+    if name == 'CholerM1B':
+        return models.CholerM1B
+    if name == 'CholerM2A':
+        return models.CholerM2A
+    if name == 'CholerM2B':
+        return models.CholerM2B
     if name == 'Naive':
         return models.Naive
     else:

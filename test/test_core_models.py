@@ -9,6 +9,10 @@ core_model_names = ['PhenoGrass',
                     'CholerPR3',
                     'CholerMPR2',
                     'CholerMPR3',
+                    'CholerM1A',
+                    'CholerM1B',
+                    'CholerM2A',
+                    'CholerM2B',
                     'Naive']
 
 GCC, predictor_vars = utils.load_test_data()
