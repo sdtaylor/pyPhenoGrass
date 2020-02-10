@@ -1,6 +1,6 @@
 from .phenograss import PhenoGrass, PhenoGrassNDVI
-from .choler import CholerPR1, CholerPR2, CholerPR3
-from .choler_modified import CholerMPR2, CholerMPR3
+from .choler2011 import CholerPR1, CholerPR2, CholerPR3
+from .choler2011_modified import CholerMPR2, CholerMPR3
 from .naive import Naive
 
 __all__ = ['PhenoGrass',
