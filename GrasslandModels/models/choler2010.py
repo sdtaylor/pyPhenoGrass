@@ -105,7 +105,7 @@ class CholerM1(BaseModel):
                 # Soil water
                 W[i+1] = W[i] + precip[i] - a1 * (W[i]/Wcap) * evap[i]
                 # Condition (ii)
-                W[i+1] = np.maximum(0, np.minimum(Wcap, W[i]))
+                W[i+1] = np.maximum(0, np.minimum(Wcap, W[i+1]))
                 
                 # Primary veg growth equation
                 V[i+1] = V[i] + a2 * (Dtl -Dtl1)
