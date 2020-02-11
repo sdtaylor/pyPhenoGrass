@@ -16,6 +16,8 @@ class CholerPR1(BaseModel):
          #                      'predictors': ['pr','tasmin','tasmax']}
         self._required_predictors = {'precip': 'per_timestep'}
 
+        self.state_variables = ['V','Dt']
+
         # Default to the faster cython version.
         self.set_internal_method(method='numpy')
     
@@ -112,7 +114,7 @@ class CholerPR1(BaseModel):
             if return_vars == 'V':
                 return V
             elif return_vars == 'all':
-                return V, Dt
+                return {'V':V,'Dt':Dt}
 
 
 class CholerPR2(BaseModel):
@@ -131,6 +133,8 @@ class CholerPR2(BaseModel):
                                      'evap'  : 'per_timestep',
                                      'Wcap'  : 'per_site'}
 
+        self.state_variables = ['V','W','Dt']
+        
         # Default to the faster cython version.
         self.set_internal_method(method='numpy')
     
@@ -231,7 +235,7 @@ class CholerPR2(BaseModel):
             if return_vars == 'V':
                 return V
             elif return_vars == 'all':
-                return V, W, Dt
+                return {'V':V, 'W':W, 'Dt':Dt}
 
 
 class CholerPR3(BaseModel):
@@ -250,6 +254,8 @@ class CholerPR3(BaseModel):
                                      'evap'  : 'per_timestep',
                                      'Wcap'  : 'per_site'}
 
+        self.state_variables = ['V','W','Dt']
+        
         # Default to the faster cython version.
         self.set_internal_method(method='numpy')
     
@@ -351,4 +357,4 @@ class CholerPR3(BaseModel):
             if return_vars == 'V':
                 return V
             elif return_vars == 'all':
-                return V, W, Dt
+                return {'V':V, 'W':W, 'Dt':Dt}
