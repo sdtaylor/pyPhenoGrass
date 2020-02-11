@@ -17,7 +17,9 @@ class Naive(BaseModel):
                                         'L': (1,6)}
         self._organize_parameters(parameters)
         self._required_predictors = {'precip': 'per_timestep'}
-
+        
+        self.state_variables = ['V']
+        
     def _apply_model(self,
                      # Site specific drivers
                      precip,  # precip, Daily vector
@@ -26,6 +28,7 @@ class Naive(BaseModel):
                      b1,  
                      b2,
                      L,
+                     return_vars = 'V'
                      ):
             """
             
@@ -36,4 +39,9 @@ class Naive(BaseModel):
             for t in range(L, precip.shape[0]):
                 summed_precip[t] = precip[t-L:(t+1)].sum(0)
             
-            return b1 + b2*summed_precip
+            V = b1 + b2*summed_precip
+            
+            if return_vars == 'V':
+                return V
+            elif return_vars == 'all':
+                return {'V':V}

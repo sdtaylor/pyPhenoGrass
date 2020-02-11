@@ -84,8 +84,8 @@ def validate_observations(observations, predictors):
         raise ValueError('observations shape does not match predictors')
 
 def validate_model(model_class):
-    required_attributes = ['_apply_model', 'all_required_parameters', '_required_data',
-                           '_organize_predictors', '_validate_formatted_predictors']
+    required_attributes = ['_apply_model', 'all_required_parameters', 
+                           '_required_predictors', 'state_variables']
     for attribute in required_attributes:
         if not hasattr(model_class, attribute):
             raise RuntimeError('Missing model attribute: ' + str(attribute))

@@ -106,7 +106,7 @@ class BaseModel():
         """
         return list(self._required_predictors.keys())
     
-    def predict(self, predictors=None, **kwargs):
+    def predict(self, predictors=None, return_variables='V', **kwargs):
         """Make predictions
 
         Make a prediction given predictor data..
@@ -117,9 +117,14 @@ class BaseModel():
         Parameters:
             predictors : dict
                 dictionary of predictors specified by the model
+                
+            return_variables : str
+                Which variables to return. V (the default) returns a numpy array
+                of the modelled vegetation. 'all' returns all available 
+                state variables as a dictionary of numpy arrays
 
         Returns:
-            predictions : array
+            predictions : array or dict of arrays
                 array the same shape of timeseries values in predictors. 
                 Or if predictors=None, the same shape as observations used in fitting.
 
@@ -144,7 +149,8 @@ class BaseModel():
                             'or set to None to predict the data used for fitting')
 
         predictions = self._apply_model(**deepcopy(predictors),
-                                        **self._fitted_params)
+                                        **self._fitted_params,
+                                        return_vars = return_variables)
 
         return predictions
 
@@ -304,7 +310,8 @@ class BaseModel():
             start = time.time()
 
         doy_estimates = self._apply_model(**deepcopy(self.fitting_predictors),
-                                          **parameters)
+                                          **parameters,
+                                          return_vars = 'V')
         if self.debug:
             self.model_timings.append(time.time() - start)
 

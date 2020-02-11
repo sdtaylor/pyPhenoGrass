@@ -24,6 +24,8 @@ class CholerMPR2(BaseModel):
                                      'Wcap'  : 'per_site',
                                      'Wp'    : 'per_site'}
 
+        self.state_variables = ['V','W','Dt']
+        
         # Default to the faster cython version.
         self.set_internal_method(method='numpy')
     
@@ -124,7 +126,7 @@ class CholerMPR2(BaseModel):
             if return_vars == 'V':
                 return V
             elif return_vars == 'all':
-                return V, W, Dt
+                return {'V':V, 'W':W, 'Dt':Dt}
 
 
 class CholerMPR3(BaseModel):
@@ -146,6 +148,8 @@ class CholerMPR3(BaseModel):
                                      'Wcap'  : 'per_site',
                                      'Wp'    : 'per_site'}
 
+        self.state_variables = ['V','W','Dt']
+        
         # Default to the faster cython version.
         self.set_internal_method(method='numpy')
     
@@ -247,4 +251,4 @@ class CholerMPR3(BaseModel):
             if return_vars == 'V':
                 return V
             elif return_vars == 'all':
-                return V, W, Dt
+                return {'V':V, 'W':W, 'Dt':Dt}

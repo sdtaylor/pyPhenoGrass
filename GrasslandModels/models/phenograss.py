@@ -26,6 +26,8 @@ class PhenoGrass(BaseModel):
                                      'Wcap'  : 'per_site',
                                      'Wp'    : 'per_site'}
     
+        self.state_variables = ['V','W','Dt']
+        
         # Default to the faster cython version.
         self.set_internal_method(method='cython')
     
@@ -121,7 +123,7 @@ class PhenoGrass(BaseModel):
         if return_vars == 'V':
             return V
         elif return_vars == 'all':
-            return V, W, Dt
+            return {'V':V, 'W':W, 'Dt':Dt}
         
 
     def _apply_model_numpy(self,
@@ -263,7 +265,7 @@ class PhenoGrass(BaseModel):
         if return_vars == 'V':
             return V
         elif return_vars == 'all':
-            return V, W, Dt
+            return {'V':V, 'W':W, 'Dt':Dt}
         
         
 class PhenoGrassNDVI(BaseModel):
@@ -289,6 +291,8 @@ class PhenoGrassNDVI(BaseModel):
                                      'Wcap'  : 'per_site',
                                      'Wp'    : 'per_site'}
     
+        self.state_variables = ['V','W','Dt']
+        
         # Default to the faster cython version.
         self.set_internal_method(method='cython')
     
@@ -375,7 +379,7 @@ class PhenoGrassNDVI(BaseModel):
         if return_vars == 'V':
             return V
         elif return_vars == 'all':
-            return V, W, Dt
+            return {'V':V, 'W':W, 'Dt':Dt}
         
 
     def _apply_model_numpy(self,
@@ -511,4 +515,4 @@ class PhenoGrassNDVI(BaseModel):
         if return_vars == 'V':
             return V
         elif return_vars == 'all':
-            return V, W, Dt
+            return {'V':V, 'W':W, 'Dt':Dt}

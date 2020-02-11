@@ -29,6 +29,7 @@ quick_testing_params = {'maxiter':3,
 fitted_models = []
 for name in core_model_names:
     m = utils.load_model(name)()
+    models.validation.validate_model(m)
     this_model_data = {k:predictor_vars[k] for k in m._required_predictors.keys()}
     m.fit(GCC, this_model_data, optimizer_params=quick_testing_params)
     fitted_models.append(m)
@@ -41,7 +42,6 @@ model_test_cases = list(zip(core_model_names, fitted_models))
 def test_predict_output_length(model_name, fitted_model):
     """Predict output shape should equal input shape"""
     assert fitted_model.predict().shape == GCC.shape
-
 
 @pytest.mark.parametrize('model_name, fitted_model', model_test_cases)
 def test_score(model_name, fitted_model):

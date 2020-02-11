@@ -19,6 +19,8 @@ class CholerM1(BaseModel):
                                      'evap'  : 'per_timestep',
                                      'Wcap'  : 'per_site'}
 
+        self.state_variables = ['V','W','Dt']
+        
         # Default to the faster cython version.
         self.set_internal_method(method='numpy')
     
@@ -117,7 +119,7 @@ class CholerM1(BaseModel):
             if return_vars == 'V':
                 return V
             elif return_vars == 'all':
-                return V, W, Dt
+                return {'V':V, 'W':W, 'Dt':Dt}
 
 
 
@@ -161,6 +163,8 @@ class CholerM2(BaseModel):
                                      'evap'  : 'per_timestep',
                                      'Wcap'  : 'per_site'}
 
+        self.state_variables = ['V','W','Dt']
+        
         # Default to the faster cython version.
         self.set_internal_method(method='numpy')
     
@@ -248,7 +252,7 @@ class CholerM2(BaseModel):
             if return_vars == 'V':
                 return V
             elif return_vars == 'all':
-                return V, W, Dt
+                return {'V':V, 'W':W, 'Dt':Dt}
 
 
 class CholerM2A(CholerM2):
