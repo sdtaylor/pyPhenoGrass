@@ -146,6 +146,7 @@ class CholerM1B(CholerM1):
     """
     def __init__(self, parameters={}):
         CholerM1.__init__(self)
+        self._organize_parameters(parameters)
 
 class CholerM2(BaseModel):
     """
@@ -278,3 +279,4 @@ class CholerM2B(CholerM2):
     """
     def __init__(self, parameters={}):
         CholerM2.__init__(self)
+        self._organize_parameters(parameters)
