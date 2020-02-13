@@ -13,7 +13,8 @@ core_model_names = ['PhenoGrass',
                     'CholerM1B',
                     'CholerM2A',
                     'CholerM2B',
-                    'Naive']
+                    'Naive',
+                    'Naive2']
 
 GCC, predictor_vars = utils.load_test_data()
 

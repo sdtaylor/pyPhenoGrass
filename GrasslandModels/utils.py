@@ -166,6 +166,8 @@ def load_model(name):
         return models.CholerM2B
     if name == 'Naive':
         return models.Naive
+    if name == 'Naive2':
+        return models.Naive2
     else:
         raise ValueError('Unknown model name: ' + name)
 
