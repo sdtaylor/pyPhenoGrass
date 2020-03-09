@@ -14,7 +14,9 @@ core_model_names = ['PhenoGrass',
                     'CholerM2A',
                     'CholerM2B',
                     'Naive',
-                    'Naive2']
+                    'Naive2',
+                    'NaiveMAPCorrected',
+                    'Naive2MAPCorrected']
 
 GCC, predictor_vars = utils.load_test_data()
 
