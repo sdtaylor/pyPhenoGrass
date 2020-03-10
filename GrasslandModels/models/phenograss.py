@@ -88,6 +88,14 @@ class PhenoGrass(BaseModel):
         than the numpy version
         """
         L = int(L) # must be a whole number. any floats will be truncated.
+
+        # These are combined into a scaling factor, so enforce
+        # Phmax being larger by returning values which result
+        # in a large error
+        if Phmin >= Phmax:
+            V = np.empty_like(precip).astype('float32')
+            V[:] = 1e10
+            return V
         
         V, W, Dt = phenograss_cython.apply_model_cython(precip = precip,
                                                         evap   = evap,
@@ -201,6 +209,13 @@ class PhenoGrass(BaseModel):
         g    = np.empty_like(Wp)
         dor  = np.empty_like(Wp)
         
+        # These are combined into a scaling factor, so enforce
+        # Phmax being larger by returning values which result
+        # in a large error
+        if Phmin >= Phmax:
+            V[:] = 1e10
+            return V
+
         # TODO: checks on daily vector lengths, etc.
         n_timesteps = precip.shape[0] - 1
         
@@ -350,6 +365,14 @@ class PhenoGrassNDVI(BaseModel):
         """
         L = int(L) # must be a whole number. any floats will be truncated.
         
+        # These are combined into a scaling factor, so enforce
+        # Phmax being larger by returning values which result
+        # in a large error
+        if Phmin >= Phmax:
+            V = np.empty_like(precip).astype('float32')
+            V[:] = 1e10
+            return V
+
         V, W, Dt = phenograss_cython.apply_model_cython(precip = precip,
                                                         evap   = evap,
                                                         Ra     = Ra,
@@ -453,6 +476,13 @@ class PhenoGrassNDVI(BaseModel):
         g    = np.empty_like(Wp)
         dor  = np.empty_like(Wp)
         
+        # These are combined into a scaling factor, so enforce
+        # Phmax being larger by returning values which result
+        # in a large error
+        if Phmin >= Phmax:
+            V[:] = 1e10
+            return V
+
         # TODO: checks on daily vector lengths, etc.
         n_timesteps = precip.shape[0] - 1
         
