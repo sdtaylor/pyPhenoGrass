@@ -168,6 +168,10 @@ def load_model(name):
         return models.Naive
     if name == 'Naive2':
         return models.Naive2
+    if name == 'NaiveMAPCorrected':
+        return models.NaiveMAPCorrected
+    if name == 'Naive2MAPCorrected':
+        return models.Naive2MAPCorrected
     else:
         raise ValueError('Unknown model name: ' + name)
 
