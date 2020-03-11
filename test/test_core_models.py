@@ -28,6 +28,8 @@ quick_testing_params = {'maxiter':3,
 
 
 
+
+
 # Setup a list of test cases where each one = (model_name, fitted_model object)
 fitted_models = []
 for name in core_model_names:
@@ -120,7 +122,26 @@ def test_predictor_validation2():
     m = utils.load_model('CholerPR1')()
     with pytest.raises(ValueError):
         m.fit(GCC, predictor_vars, optimizer_params = quick_testing_params)
-        
+
+@pytest.mark.parametrize('model_name, fitted_model', model_test_cases)
+def test_internal_broadcasting(model_name, fitted_model):
+    """
+    In the apply_model code each model should be able to handle any number of
+    sites, scenarios, etc as long as the 0 axis is the time axis.
+    This checks that by ensuring predictors copied to different axis
+    produce the same output.
+    Note this only applies to the numpy, and not the cython, method. 
+    broadcasting in cython is a bugger. 
+    """
+    def copy_to_last_axis(a):
+        return np.append(np.expand_dims(a, -1), np.expand_dims(a, -1), axis=-1)
+    
+    this_model_data = {k:copy_to_last_axis(predictor_vars[k]) for k in fitted_model._required_predictors.keys()}
+    fitted_model.set_internal_method('numpy')
+    model_output = fitted_model.predict(predictors=this_model_data)
+
+    assert np.allclose(model_output[:,:,0], model_output[:,:,1], equal_nan=True)
+    
 ########################################################################
 # Some PhenoGrass specific tests
 def test_phenograss_fit():

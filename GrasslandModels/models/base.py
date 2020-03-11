@@ -100,6 +100,13 @@ class BaseModel():
         self.fitting_predictors = predictors
         self.obs_fitting = observations
     
+    def set_internal_method(self, method):
+        """ 
+        Here for compatability. This is overidden by a model specific
+        set_internal_method where appropriate.
+        """
+        pass
+    
     def required_predictors(self):
         """
         Get a list of the required model predictors
