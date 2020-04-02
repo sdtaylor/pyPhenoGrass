@@ -26,7 +26,7 @@ class PhenoGrass(BaseModel):
                                      'Wcap'  : 'per_site',
                                      'Wp'    : 'per_site'}
     
-        self.state_variables = ['V','W','Dt']
+        self.state_variables = ['V','fCover','W','Dt']
         
         # Default to the faster cython version.
         self.set_internal_method(method='cython')
@@ -125,13 +125,14 @@ class PhenoGrass(BaseModel):
         
         V, W, Dt = np.asarray(V), np.asarray(W), np.asarray(Dt)
         
+        fCover = V[:]
+        
         scaling_factor = MAP / (MAP + h)
         V = V / scaling_factor
-        
         if return_vars == 'V':
             return V
         elif return_vars == 'all':
-            return {'V':V, 'W':W, 'Dt':Dt}
+            return {'V':V, 'fCover':fCover, 'W':W, 'Dt':Dt}
         
 
     def _apply_model_numpy(self,
@@ -275,12 +276,14 @@ class PhenoGrass(BaseModel):
             # Constrain veg to 0-1
             V[i+1] = np.maximum(Vmin, np.minimum(Vmax, V[i+1]))
         
+        fCover = V[:]
+        
         scaling_factor = MAP / (MAP + h)
         V = V / scaling_factor
         if return_vars == 'V':
             return V
         elif return_vars == 'all':
-            return {'V':V, 'W':W, 'Dt':Dt}
+            return {'V':V, 'fCover':fCover, 'W':W, 'Dt':Dt}
         
         
 class PhenoGrassNDVI(BaseModel):
