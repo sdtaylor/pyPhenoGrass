@@ -17,8 +17,6 @@ class CholerMPR2(BaseModel):
         self.all_required_parameters = {'b2': (0, 100),'b3': (0, 100), 
                                         'b4': (0, 100), 'L': (1,30)}
         self._organize_parameters(parameters)
-        #self._required_data = {'predictor_columns': ['site_id', 'year', 'doy', 'temperature'],
-         #                      'predictors': ['pr','tasmin','tasmax']}
         self._required_predictors = {'precip': 'per_timestep',
                                      'evap'  : 'per_timestep',
                                      'Wcap'  : 'per_site',
@@ -26,7 +24,6 @@ class CholerMPR2(BaseModel):
 
         self.state_variables = ['V','W','Dt']
         
-        # Default to the faster cython version.
         self.set_internal_method(method='numpy')
     
     def set_internal_method(self, method = 'numpy'):
@@ -41,13 +38,8 @@ class CholerMPR2(BaseModel):
                          # Site specific drivers
                          precip,  # precip, Daily vector
                          evap,    # potential ET, Daily vector
-                         #T,       # ? mean temp ? not actually used in phenograss.f90
-                         #Ra,      # TOA radiation, MJ m-2 s-1, daily vector
-                         #Tm,      # Running mean T with 15 day lag
                          Wcap,    # field capacity, single value/site
                          Wp,      # wilting point, single value/site
-                         #MAP,     # Mean avg precip, used to scale model input(gcc) to output (fcover)
-                                  # fCover = GCC * MAP/ (MAP+h), where h is an estimated  parameter
                          
                          # Model parameters
                          #b1, Replaced by Wp in the modified model    
@@ -68,13 +60,13 @@ class CholerMPR2(BaseModel):
                          Wstart    = 0,
                          V_initial = 0.001,
                          # Normally just the V (vegatation cover) should be returned,
-                         # but for diagnostics use 'all' to get V, and Dt
+                         # but for diagnostics use 'all' to get V, W, and Dt
                          return_vars = 'V'
                          ):
             """
             
             """
-            L = int(L) # must be a whole number. and floats will be truncated.
+            L = int(L) # must be a whole number, any floats will be truncated.
             
             # Initialize everything
             # Primary state variables
@@ -128,7 +120,6 @@ class CholerMPR2(BaseModel):
             elif return_vars == 'all':
                 return {'V':V, 'W':W, 'Dt':Dt}
 
-
 class CholerMPR3(BaseModel):
     """
     The "PR3" four parameter model described in Choler et al. 2011
@@ -141,8 +132,6 @@ class CholerMPR3(BaseModel):
         self.all_required_parameters = {'b2': (0, 100), 'b3': (0, 100),
                                         'b4': (0, 100), 'L': (1,30)}
         self._organize_parameters(parameters)
-        #self._required_data = {'predictor_columns': ['site_id', 'year', 'doy', 'temperature'],
-         #                      'predictors': ['pr','tasmin','tasmax']}
         self._required_predictors = {'precip': 'per_timestep',
                                      'evap'  : 'per_timestep',
                                      'Wcap'  : 'per_site',
@@ -150,7 +139,6 @@ class CholerMPR3(BaseModel):
 
         self.state_variables = ['V','W','Dt']
         
-        # Default to the faster cython version.
         self.set_internal_method(method='numpy')
     
     def set_internal_method(self, method = 'numpy'):
@@ -165,13 +153,8 @@ class CholerMPR3(BaseModel):
                          # Site specific drivers
                          precip,  # precip, Daily vector
                          evap,    # potential ET, Daily vector
-                         #T,       # ? mean temp ? not actually used in phenograss.f90
-                         #Ra,      # TOA radiation, MJ m-2 s-1, daily vector
-                         #Tm,      # Running mean T with 15 day lag
                          Wcap,    # field capacity, single value/site
                          Wp,      # wilting point, single value/site
-                         #MAP,     # Mean avg precip, used to scale model input(gcc) to output (fcover)
-                                  # fCover = GCC * MAP/ (MAP+h), where h is an estimated  parameter
                          
                          # Model parameters
                          #b1, Replaced by Wp in the modified model  
@@ -192,13 +175,13 @@ class CholerMPR3(BaseModel):
                          Wstart    = 0,
                          V_initial = 0.001,
                          # Normally just the V (vegatation cover) should be returned,
-                         # but for diagnostics use 'all' to get V, and Dt
+                         # but for diagnostics use 'all' to get V, W, and Dt
                          return_vars = 'V'
                          ):
             """
             
             """
-            L = int(L) # must be a whole number. and floats will be truncated.
+            L = int(L) # must be a whole number, any floats will be truncated.
             
             # Initialize everything
             # Primary state variables

@@ -13,15 +13,12 @@ class CholerM1(BaseModel):
                                         'a3': (0, 100), 
                                         'L': (1,30)}
         self._organize_parameters(parameters)
-        #self._required_data = {'predictor_columns': ['site_id', 'year', 'doy', 'temperature'],
-         #                      'predictors': ['pr','tasmin','tasmax']}
         self._required_predictors = {'precip': 'per_timestep',
                                      'evap'  : 'per_timestep',
                                      'Wcap'  : 'per_site'}
 
         self.state_variables = ['V','W','Dt']
         
-        # Default to the faster cython version.
         self.set_internal_method(method='numpy')
     
     def set_internal_method(self, method = 'numpy'):
@@ -36,13 +33,7 @@ class CholerM1(BaseModel):
                          # Site specific drivers
                          precip,  # precip, Daily vector
                          evap,    # potential ET, Daily vector
-                         #T,       # ? mean temp ? not actually used in phenograss.f90
-                         #Ra,      # TOA radiation, MJ m-2 s-1, daily vector
-                         #Tm,      # Running mean T with 15 day lag
                          Wcap,    # field capacity, single value/site
-                         #Wp,      # wilting point, single value/site
-                         #MAP,     # Mean avg precip, used to scale model input(gcc) to output (fcover)
-                                  # fCover = GCC * MAP/ (MAP+h), where h is an estimated  parameter
                          
                          # Model parameters
                          a1,  
@@ -53,7 +44,7 @@ class CholerM1(BaseModel):
                          # Contraints on vegetation. 
                          Vmin = 0.001, # Needs to be small non-zero value 
                          Vmax = 1.,    # 100% cause GCC is scaled 0-1
-                         # Note in the original Choler 2011 paper, Vmax is a site
+                         # Note in the original Choler 2010 paper, Vmax is a site
                          # specific value set to the maximum value observed at a site.
                          # This is not feasable for extrapolation though. 
                      
@@ -62,13 +53,13 @@ class CholerM1(BaseModel):
                          Wstart    = 0,
                          V_initial = 0.001,
                          # Normally just the V (vegatation cover) should be returned,
-                         # but for diagnostics use 'all' to get V, and Dt
+                         # but for diagnostics use 'all' to get V, W, and Dt
                          return_vars = 'V'
                          ):
             """
             
             """
-            L = int(L) # must be a whole number. and floats will be truncated.
+            L = int(L) # must be a whole number, any floats will be truncated.
             
             # Initialize everything
             # Primary state variables
@@ -121,11 +112,9 @@ class CholerM1(BaseModel):
             elif return_vars == 'all':
                 return {'V':V, 'W':W, 'Dt':Dt}
 
-
-
 class CholerM1A(CholerM1):
     """
-    The "M1A" model described in Choler et al. 
+    The "M1A" model described in Choler et al. 2010
     
     This fixes the a3 parameter to 0
     """
@@ -135,7 +124,6 @@ class CholerM1A(CholerM1):
                                         'a3': 0, 
                                         'L': (1,30)}
         self._organize_parameters(parameters)
-
 
 class CholerM1B(CholerM1):
     """
@@ -150,7 +138,7 @@ class CholerM1B(CholerM1):
 
 class CholerM2(BaseModel):
     """
-    The "M2" model described in Choler et al. 2011
+    The "M2" model described in Choler et al. 2010
     """
     def __init__(self, parameters={}):
         BaseModel.__init__(self)
@@ -158,15 +146,12 @@ class CholerM2(BaseModel):
                                         'b3': (0, 100), 'b4': (0, 100), 
                                         'b5': (0,100)}
         self._organize_parameters(parameters)
-        #self._required_data = {'predictor_columns': ['site_id', 'year', 'doy', 'temperature'],
-         #                      'predictors': ['pr','tasmin','tasmax']}
         self._required_predictors = {'precip': 'per_timestep',
                                      'evap'  : 'per_timestep',
                                      'Wcap'  : 'per_site'}
 
         self.state_variables = ['V','W','Dt']
         
-        # Default to the faster cython version.
         self.set_internal_method(method='numpy')
     
     def set_internal_method(self, method = 'numpy'):
@@ -181,13 +166,7 @@ class CholerM2(BaseModel):
                          # Site specific drivers
                          precip,  # precip, Daily vector
                          evap,    # potential ET, Daily vector
-                         #T,       # ? mean temp ? not actually used in phenograss.f90
-                         #Ra,      # TOA radiation, MJ m-2 s-1, daily vector
-                         #Tm,      # Running mean T with 15 day lag
                          Wcap,    # field capacity, single value/site
-                         #Wp,      # wilting point, single value/site
-                         #MAP,     # Mean avg precip, used to scale model input(gcc) to output (fcover)
-                                  # fCover = GCC * MAP/ (MAP+h), where h is an estimated  parameter
                          
                          # Model parameters
                          b1,  
@@ -195,12 +174,11 @@ class CholerM2(BaseModel):
                          b3,
                          b4,
                          b5,
-                         #L, No lag component in this one
                          
                          # Contraints on vegetation. 
                          Vmin = 0.001, # Needs to be small non-zero value 
                          Vmax = 1.,    # 100% cause GCC is scaled 0-1
-                         # Note in the original Choler 2011 paper, Vmax is a site
+                         # Note in the original Choler 2010 paper, Vmax is a site
                          # specific value set to the maximum value observed at a site.
                          # This is not feasable for extrapolation though. 
                      
@@ -209,14 +187,12 @@ class CholerM2(BaseModel):
                          Wstart    = 0,
                          V_initial = 0.001,
                          # Normally just the V (vegatation cover) should be returned,
-                         # but for diagnostics use 'all' to get V, and Dt
+                         # but for diagnostics use 'all' to get V, W, and Dt
                          return_vars = 'V'
                          ):
             """
             
-            """
-            #L = int(L) # must be a whole number. and floats will be truncated.
-            
+            """            
             # Initialize everything
             # Primary state variables
             W = np.empty_like(precip).astype('float32')
@@ -227,7 +203,6 @@ class CholerM2(BaseModel):
     
             # Derived variables
             Dt = np.zeros_like(precip).astype('float32')
-            
             
             n_timesteps = precip.shape[0] - 1
             
@@ -241,7 +216,6 @@ class CholerM2(BaseModel):
                 W[i+1] = W[i] + precip[i] - b1 * (1 - V[i]) * (W[i]/Wcap) * evap[i] - b2 * V[i] * Dt[i]
                 # condition (ii)
                 W[i+1] = np.maximum(0, np.minimum(Wcap, W[i+1]))
-                
                 
                 # Primary veg growth equation
                 V[i+1] = b3 * (Dt[i]/(Wcap - b5)) * V[i] * (1-(V[i]/Vmax)) - (b4 * V[i])
@@ -258,7 +232,7 @@ class CholerM2(BaseModel):
 
 class CholerM2A(CholerM2):
     """
-    The "M2A" model described in Choler et al. 2011
+    The "M2A" model described in Choler et al. 2010
     
     Here the b5 parameter is fixed at 0, essentially making plant available 
     water equal to total soil water.
@@ -272,7 +246,7 @@ class CholerM2A(CholerM2):
 
 class CholerM2B(CholerM2):
     """
-    The "M2B" model described in Choler et al. 2011
+    The "M2B" model described in Choler et al. 2010
     
     Parameterizing the full model essentially. Described here
     for completeness.
