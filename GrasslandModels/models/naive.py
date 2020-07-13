@@ -109,13 +109,13 @@ class NaiveMAPCorrected(BaseModel):
     """
     def __init__(self, parameters={}):
         BaseModel.__init__(self)
-        self.all_required_parameters = {'b1': (0, 100), 'b2': (0, 100), 
+        self.all_required_parameters = {'b1': (-100, 100), 'b2': (-100, 100), 
                                         'L': (1,6),      'h': (0,1000)}
         self._organize_parameters(parameters)
         self._required_predictors = {'precip': 'per_timestep',
                                      'MAP'   : 'per_site'}
         
-        self.state_variables = ['V']
+        self.state_variables = ['V', 'fCover']
         
     def _apply_model(self,
                      # Site specific drivers
@@ -139,13 +139,15 @@ class NaiveMAPCorrected(BaseModel):
             
             V = b1 + b2*summed_precip
             
+            fCover = V[:]
+            
             scaling_factor = MAP / (MAP + h)
             V = V / scaling_factor
             
             if return_vars == 'V':
                 return V
             elif return_vars == 'all':
-                return {'V':V}
+                return {'V':V, 'fCover':fCover}
             
             
 class Naive2MAPCorrected(BaseModel):
@@ -164,15 +166,15 @@ class Naive2MAPCorrected(BaseModel):
     """
     def __init__(self, parameters={}):
         BaseModel.__init__(self)
-        self.all_required_parameters = {'b1': (0, 100), 'b2': (0, 100), 
-                                        'b3': (0,100),'L': (1,6),
+        self.all_required_parameters = {'b1': (-100, 100), 'b2': (-100, 100), 
+                                        'b3': (-100,100),'L': (1,6),
                                         'h':  (0,1000)}
         self._organize_parameters(parameters)
         self._required_predictors = {'precip': 'per_timestep',
                                      'evap'  : 'per_timestep',
                                      'MAP'   : 'per_site'}
         
-        self.state_variables = ['V']
+        self.state_variables = ['V', 'fCover']
         
     def _apply_model(self,
                      # Site specific drivers
@@ -199,10 +201,12 @@ class Naive2MAPCorrected(BaseModel):
             
             V = b1 + b2*summed_precip + b3*evap
             
+            fCover = V[:]
+            
             scaling_factor = MAP / (MAP + h)
             V = V / scaling_factor
             
             if return_vars == 'V':
                 return V
             elif return_vars == 'all':
-                return {'V':V}
+                return {'V':V, 'fCover':fCover}
