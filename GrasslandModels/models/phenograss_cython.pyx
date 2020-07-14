@@ -28,18 +28,18 @@ def apply_model_cython(
                             # "slope" in the phenograss parameter files. 
                             # This scaling is done on the numpy side 
                  # Constants
-                 float Tmin = 0.,  # Maximum temperature of the growth response curve
-                 float Tmax = 45.,
+                 float Tmin,  # Maximum temperature of the growth response curve
+                 float Tmax,
                  
-                 float Vmin = 0.001, # Nees to be small non-zero value 
-                 float Vmax = 1.,    # 100% cause GCC is scaled 0-1
+                 float Vmin, # Nees to be small non-zero value 
+                 float Vmax,    # 100% cause GCC is scaled 0-1
                  
                  # Initial conditions
-                 float W_initial = 0,
-                 float Wstart    = 0.,
-                 float V_initial = 0.001,
-                 float Sd        = 0.,
-                 float m         = 3600., # Not actaully used anywhere but in phenograss.f90
+                 float W_initial,
+                 float Wstart,
+                 float V_initial,
+                 float Sd,
+                 float m, # Not actaully used anywhere but in phenograss.f90
                  
                  # Normally just the V (vegatation cover) should be returned,
                  # but for diagnostics use 'all' to get V, W, and Dtl

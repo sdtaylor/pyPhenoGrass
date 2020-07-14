@@ -29,16 +29,92 @@ class PhenoGrass(BaseModel):
         self.state_variables = ['V','fCover','W','Dt']
         
         # Default to the faster cython version.
-        self.set_internal_method(method='cython')
+        self.internal_method = 'cython'
     
     def set_internal_method(self, method = 'cython'):
-        if method == 'cython':
-            self._apply_model = self._apply_model_cython
-        elif method == 'numpy':
-            self._apply_model = self._apply_model_numpy
+        if method in ['cython','numpy']:
+            self.internal_method = method
         else:
             raise ValueError('Unknown phenograss method: ' + method)
     
+    def _apply_model(self,
+                     # Site specific drivers
+                     precip,  # precip, Daily vector
+                     evap,    # potential ET, Daily vector
+                     #T,       # ? mean temp ? not actually used in phenograss.f90
+                     Ra,      # TOA radiation, MJ m-2 s-1, daily vector
+                     Tm,      # Running mean T with 15 day lag
+                     Wcap,    # field capacity, single value/site
+                     Wp,      # wilting point, single value/site
+                     MAP,     # Mean avg precip, used to scale model input(gcc) to output (fcover)
+                              # fCover = GCC * MAP/ (MAP+h), where h is an estimated  parameter
+                    
+                     # Model parameters
+                     b1,  # Note b1 is set below to Wp as writtin the phenograss.f90. 
+                           # TODO: sort that out
+                     b2,
+                     b3,
+                     b4,
+                     L,
+                     Phmin,
+                     Topt,
+                     Phmax,
+                     
+                     h = None, # This is from Eq. 1 to help scale the fCover. It's denoted a
+                               # "slope" in the phenograss parameter files. 
+                     # Constants
+                     Tmin = 0,  # Maximum temperature of the growth response curve
+                     Tmax = 45,
+                     
+                     Vmin = 0.001, # Nees to be small non-zero value 
+                     Vmax = 0.99, # 100% cause GCC is scaled 0-1
+                     d    = 0,     # decay flag
+                     
+                     # Initial conditions
+                     W_initial = 0,
+                     Wstart    = 0,
+                     V_initial = 0.001,
+                     Sd        = 0,
+                     m         = 3600, # Not actaully used anywhere but in phenograss.f90
+                    
+                     # Normally just the V (vegatation cover) should be returned,
+                     # but for diagnostics use 'all' to get V, W, and Dtl
+                     return_vars = 'V'
+                     ):
+        
+        if self.internal_method == 'cython':
+            model_method = self._apply_model_cython
+        elif self.internal_method == 'numpy':
+            model_method = self._apply_model_numpy
+            
+        return model_method(precip = precip, 
+                            evap = evap, 
+                            Ra = Ra, 
+                            Tm = Tm, 
+                            Wcap = Wcap, 
+                            Wp = Wp, 
+                            MAP = MAP, 
+                            b1 = b1, 
+                            b2 = b2, 
+                            b3 = b3, 
+                            b4 = b4, 
+                            L  = L, 
+                            Phmin = Phmin, 
+                            Topt  = Topt, 
+                            Phmax = Phmax, 
+                            h = h, 
+                            Tmin = Tmin, 
+                            Tmax = Tmax, 
+                            Vmin = Vmin, 
+                            Vmax = Vmax, 
+                            d    = d, 
+                            W_initial = W_initial, 
+                            Wstart    = Wstart, 
+                            V_initial = V_initial, 
+                            Sd = Sd, 
+                            m = m, 
+                            return_vars = return_vars)
+        
     def _apply_model_cython(self,
                              # Site specific drivers
                              precip,  # precip, Daily vector
@@ -62,26 +138,26 @@ class PhenoGrass(BaseModel):
                              Topt,
                              Phmax,
                              
-                             h = None, # This is from Eq. 1 to help scale the fCover. It's denoted a
+                             h, # This is from Eq. 1 to help scale the fCover. It's denoted a
                                        # "slope" in the phenograss parameter files. 
                              # Constants
-                             Tmin = 0,  # Maximum temperature of the growth response curve
-                             Tmax = 45,
+                             Tmin,  # Maximum temperature of the growth response curve
+                             Tmax,
                              
-                             Vmin = 0.001, # Nees to be small non-zero value 
-                             Vmax = 1.,    # 100% cause GCC is scaled 0-1
-                             d    = 0,     # decay flag
+                             Vmin, # Nees to be small non-zero value 
+                             Vmax, # 100% cause GCC is scaled 0-1
+                             d,     # decay flag
                              
                              # Initial conditions
-                             W_initial = 0,
-                             Wstart    = 0,
-                             V_initial = 0.001,
-                             Sd        = 0,
-                             m         = 3600, # Not actaully used anywhere but in phenograss.f90
+                             W_initial,
+                             Wstart,
+                             V_initial,
+                             Sd,
+                             m, # Not actaully used anywhere but in phenograss.f90
                              
                              # Normally just the V (vegatation cover) should be returned,
                              # but for diagnostics use 'all' to get V, W, and Dtl
-                             return_vars = 'V'
+                             return_vars
                              ):
         """
         This uses the compiled cython version of the model and is much faster
@@ -158,26 +234,26 @@ class PhenoGrass(BaseModel):
                      Topt,
                      Phmax,
                      
-                     h = None, # This is from Eq. 1 to help scale the fCover. It's denoted a
+                     h, # This is from Eq. 1 to help scale the fCover. It's denoted a
                                # "slope" in the phenograss parameter files. 
                      # Constants
-                     Tmin = 0,  # Maximum temperature of the growth response curve
-                     Tmax = 45,
+                     Tmin,  # Maximum temperature of the growth response curve
+                     Tmax,
                      
-                     Vmin = 0.001, # Nees to be small non-zero value 
-                     Vmax = 1.,    # 100% cause GCC is scaled 0-1
-                     d    = 0,     # decay flag
+                     Vmin, # Nees to be small non-zero value 
+                     Vmax,    # 100% cause GCC is scaled 0-1
+                     d,     # decay flag
                      
                      # Initial conditions
-                     W_initial = 0,
-                     Wstart    = 0,
-                     V_initial = 0.001,
-                     Sd        = 0,
-                     m         = 3600, # Not actaully used anywhere but in phenograss.f90
+                     W_initial,
+                     Wstart,
+                     V_initial,
+                     Sd,
+                     m, # Not actaully used anywhere but in phenograss.f90
                      
                      # Normally just the V (vegatation cover) should be returned,
                      # but for diagnostics use 'all' to get V, W, and Dtl
-                     return_vars = 'V'
+                     return_vars
                      ):
         """
         This is the original model version using numpy arrays for everything. 
