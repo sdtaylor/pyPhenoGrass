@@ -38,7 +38,7 @@ class CholerPR1(BaseModel):
                          
                          # Contraints on vegetation. 
                          Vmin = 0.001, # Needs to be small non-zero value 
-                         Vmax = 1.,    # 100% cause GCC is scaled 0-1
+                         Vmax = 0.99,    # 100% cause GCC is scaled 0-1
                          # Note in the original Choler 2011 paper, Vmax is a site
                          # specific value set to the maximum value observed at a site.
                          # This is not feasable for extrapolation though. 
@@ -140,7 +140,7 @@ class CholerPR1Gcc(BaseModel):
                          
                          # Contraints on vegetation. 
                          Vmin = 0.001, # Needs to be small non-zero value 
-                         Vmax = 1.,    # 100% cause GCC is scaled 0-1
+                         Vmax = 0.99,    # 100% cause GCC is scaled 0-1
                          # Note in the original Choler 2011 paper, Vmax is a site
                          # specific value set to the maximum value observed at a site.
                          # This is not feasable for extrapolation though. 
@@ -248,7 +248,7 @@ class CholerPR2(BaseModel):
                          
                          # Contraints on vegetation. 
                          Vmin = 0.001, # Needs to be small non-zero value 
-                         Vmax = 1.,    # 100% cause GCC is scaled 0-1
+                         Vmax = 0.99,    # 100% cause GCC is scaled 0-1
                          # Note in the original Choler 2011 paper, Vmax is a site
                          # specific value set to the maximum value observed at a site.
                          # This is not feasable for extrapolation though. 
@@ -362,7 +362,7 @@ class CholerPR2Gcc(BaseModel):
                          
                          # Contraints on vegetation. 
                          Vmin = 0.001, # Needs to be small non-zero value 
-                         Vmax = 1.,    # 100% cause GCC is scaled 0-1
+                         Vmax = 0.99,    # 100% cause GCC is scaled 0-1
                          # Note in the original Choler 2011 paper, Vmax is a site
                          # specific value set to the maximum value observed at a site.
                          # This is not feasable for extrapolation though. 
@@ -478,7 +478,7 @@ class CholerPR3(BaseModel):
                          
                          # Contraints on vegetation. 
                          Vmin = 0.001, # Needs to be small non-zero value 
-                         Vmax = 1.,    # 100% cause GCC is scaled 0-1
+                         Vmax = 0.99,    # 100% cause GCC is scaled 0-1
                          # Note in the original Choler 2011 paper, Vmax is a site
                          # specific value set to the maximum value observed at a site.
                          # This is not feasable for extrapolation though. 
@@ -595,7 +595,7 @@ class CholerPR3Gcc(BaseModel):
                          
                          # Contraints on vegetation. 
                          Vmin = 0.001, # Needs to be small non-zero value 
-                         Vmax = 1.,    # 100% cause GCC is scaled 0-1
+                         Vmax = 0.99,    # 100% cause GCC is scaled 0-1
                          # Note in the original Choler 2011 paper, Vmax is a site
                          # specific value set to the maximum value observed at a site.
                          # This is not feasable for extrapolation though. 
