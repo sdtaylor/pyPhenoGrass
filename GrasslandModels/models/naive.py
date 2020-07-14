@@ -126,6 +126,8 @@ class NaiveMAPCorrected(BaseModel):
                      b2,
                      L,
                      h,
+                     Vmin = 0.001,
+                     Vmax = 0.99,
                      return_vars = 'V'
                      ):
             """
@@ -138,6 +140,8 @@ class NaiveMAPCorrected(BaseModel):
                 summed_precip[t] = precip[t-L:(t+1)].sum(0)
             
             V = b1 + b2*summed_precip
+            
+            V = np.maximum(Vmin, np.minimum(Vmax, V))
             
             fCover = V[:]
             
@@ -188,6 +192,8 @@ class Naive2MAPCorrected(BaseModel):
                      b3,
                      L,
                      h,
+                     Vmin = 0.001,
+                     Vmax = 0.99,
                      return_vars = 'V'
                      ):
             """
@@ -200,6 +206,8 @@ class Naive2MAPCorrected(BaseModel):
                 summed_precip[t] = precip[t-L:(t+1)].sum(0)
             
             V = b1 + b2*summed_precip + b3*evap
+            
+            V = np.maximum(Vmin, np.minimum(Vmax, V))
             
             fCover = V[:]
             
