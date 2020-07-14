@@ -16,12 +16,18 @@ core_model_names = ['PhenoGrass',
                     'Naive',
                     'Naive2',
                     'NaiveMAPCorrected',
-                    'Naive2MAPCorrected']
+                    'Naive2MAPCorrected',
+                    'CholerPR1Gcc',
+                    'CholerPR2Gcc',
+                    'CholerPR3Gcc',
+                    'CholerMPR2Gcc',
+                    'CholerMPR3Gcc',
+                    ]
 
 GCC, predictor_vars = utils.load_test_data()
 
-quick_testing_params = {'maxiter':3,
-                         'popsize':2,
+quick_testing_params = {'maxiter':2,
+                         'popsize':1,
                          'mutation':(0.5,1),
                          'recombination':0.25,
                          'disp':False}
