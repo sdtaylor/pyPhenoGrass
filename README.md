@@ -1,4 +1,4 @@
-# GrasslandModels [![Build Status](https://travis-ci.org/sdtaylor/GrasslandModels.svg?branch=master)](https://travis-ci.org/sdtaylor/GrasslandModels)
+# GrasslandModels [![test-package](https://github.com/sdtaylor/GrasslandModels/workflows/test-package/badge.svg)](https://github.com/sdtaylor/GrasslandModels/actions)
 
 A python implementation for Grassland Productivity/Phenology models.
 
