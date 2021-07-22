@@ -3,8 +3,10 @@
 A python implementation for Grassland Productivity/Phenology models.
 
 - PhenoGrass model described in [Hufkens et al. 2016](http://www.nature.com/articles/nclimate2942).
-- Pulse Repsonse models described in [Choler et al. 2011](https://doi.org/10.1007/s10021-010-9403-9) and [Choler et al. 2010](https://doi.org/10.5194/bg-7-907-2010)
+- Pulse Repsonse models described in [Choler et al. 2011](https://doi.org/10.1007/s10021-010-9403-9) and [Choler et al. 2010](https://doi.org/10.5194/bg-7-907-2010)  
 
+The PhenoGrass model was used in the following study:  
+Taylor, S.D. and Browning, D.M., 2021. Multi-scale assessment of a grassland productivity model. Biogeosciences, 18(6), pp.2213-2220. https://doi.org/10.5194/bg-18-2213-2021. [Github Repo](https://github.com/sdtaylor/PhenograssReplication)  
 
 ## Installation
 Requires: cython, scipy, pandas, joblib, and numpy
