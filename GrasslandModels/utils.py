@@ -172,6 +172,16 @@ def load_model(name):
         return models.NaiveMAPCorrected
     if name == 'Naive2MAPCorrected':
         return models.Naive2MAPCorrected
+    if name == 'CholerPR1Gcc':
+        return models.CholerPR1Gcc
+    if name == 'CholerPR2Gcc':
+        return models.CholerPR2Gcc
+    if name == 'CholerPR3Gcc':
+        return models.CholerPR3Gcc
+    if name == 'CholerMPR2Gcc':
+        return models.CholerMPR2Gcc
+    if name == 'CholerMPR3Gcc':
+        return models.CholerMPR3Gcc
     else:
         raise ValueError('Unknown model name: ' + name)
 
