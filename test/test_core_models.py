@@ -1,5 +1,6 @@
 from GrasslandModels import models, utils
 import pytest
+from copy import deepcopy
 import numpy as np
 
 core_model_names = ['PhenoGrass',
@@ -36,7 +37,7 @@ for name in core_model_names:
     m = utils.load_model(name)()
     models.validation.validate_model(m)
     this_model_data = {k:predictor_vars[k] for k in m._required_predictors.keys()}
-    m.fit(GCC, this_model_data, optimizer_params=quick_testing_params)
+    m.fit(GCC, this_model_data.copy(), optimizer_params=quick_testing_params)
     fitted_models.append(m)
 
 model_test_cases = list(zip(core_model_names, fitted_models))
@@ -106,7 +107,7 @@ def test_shape_validation3():
     m = utils.load_model('PhenoGrass')()
     # Drop a single site of gcc data
     with pytest.raises(ValueError):
-        m.fit(GCC[:,:-1], predictor_vars, optimizer_params = quick_testing_params)
+        m.fit(GCC[:,:-1], predictor_vars.copy(), optimizer_params = quick_testing_params)
 
 def test_predictor_validation1():
     # Raise error when not all predictors are passed
@@ -121,8 +122,26 @@ def test_predictor_validation2():
     # CholerPR does not need everything
     m = utils.load_model('CholerPR1')()
     with pytest.raises(ValueError):
-        m.fit(GCC, predictor_vars, optimizer_params = quick_testing_params)
+        m.fit(GCC, predictor_vars.copy(), optimizer_params = quick_testing_params)
 
+@pytest.mark.parametrize('model_name, fitted_model', model_test_cases)
+def test_fitting_data_manipultaiton(model_name, fitted_model):
+    """
+    Theres a chance models may change the internal fitting data. The individual models
+    *shouldn't*, but its still possible. There used to be a deepcopy in the base method
+    to guard against this, but that slows things down and seems uneccesary.
+    This is a quick check to make sure that is not happening.
+    Note than after predictor_vars is loaded at the top of this test script
+    its always passed as a copy to the model fitting method just to ensure
+    its fresh.
+    """
+
+    this_model_data = {k:predictor_vars[k] for k in fitted_model._required_predictors.keys()}
+    # TODO: Issues here with comparing nans inside the numpy array
+    # All np arrays in the predictor dict should be unchanged after model fitting
+    c = [(fitted_model.fitting_predictors[k] == v).all() for k,v in this_model_data.items()]
+    assert all(c)
+        
 @pytest.mark.parametrize('model_name, fitted_model', model_test_cases)
 def test_internal_broadcasting(model_name, fitted_model):
     """
@@ -146,7 +165,7 @@ def test_internal_broadcasting(model_name, fitted_model):
 # Some PhenoGrass specific tests
 def test_phenograss_fit():
     m = models.PhenoGrass(parameters= {'L':2})
-    m.fit(GCC, predictor_vars, optimizer_params=quick_testing_params, debug = True)
+    m.fit(GCC, predictor_vars.copy(), optimizer_params=quick_testing_params, debug = True)
     assert isinstance(m.get_params(), dict)
 
 

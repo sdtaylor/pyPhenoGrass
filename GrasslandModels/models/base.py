@@ -4,7 +4,6 @@ from . import utils, validation
 import time
 from collections import OrderedDict
 from warnings import warn
-from copy import deepcopy
 
 
 class BaseModel():
@@ -155,7 +154,7 @@ class BaseModel():
                             'of new data to predict,' +
                             'or set to None to predict the data used for fitting')
 
-        predictions = self._apply_model(**deepcopy(predictors),
+        predictions = self._apply_model(**predictors,
                                         **self._fitted_params,
                                         return_vars = return_variables)
 
@@ -316,7 +315,7 @@ class BaseModel():
         if self.debug:
             start = time.time()
 
-        doy_estimates = self._apply_model(**deepcopy(self.fitting_predictors),
+        doy_estimates = self._apply_model(**self.fitting_predictors,
                                           **parameters,
                                           return_vars = 'V')
         if self.debug:
